@@ -35,6 +35,7 @@
       --font-head:  'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
       --font-body:  'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
       --ease-expo:  cubic-bezier(0.16,1,0.3,1);
+      --btn-gradient: linear-gradient(145deg, #0d1b4b 0%, #1a2f8a 45%, #2254f4 100%);
     }
 
     html { scroll-behavior: smooth; }
@@ -167,12 +168,12 @@
       transform: translateY(-2px);
     }
     #navbar.scrolled .btn-nav-solid {
-      background: var(--accent);
+      background: var(--btn-gradient);
       color: var(--white);
-      border-color: var(--accent);
+      border-color: transparent;
     }
     #navbar.scrolled .btn-nav-solid:hover {
-      background: #1a43d4;
+      background: linear-gradient(145deg, #111e56 0%, #1f3699 45%, #2e63ff 100%);
       box-shadow: 0 8px 28px rgba(34,84,244,0.32);
     }
 
@@ -341,7 +342,7 @@
       gap: 10px;
       width: 100%;
       padding: 14px;
-      background: var(--accent);
+      background: var(--btn-gradient);
       color: var(--white);
       font-family: var(--font-body);
       font-size: 0.875rem;
@@ -350,9 +351,9 @@
       border: none;
       cursor: pointer;
       text-align: center;
-      transition: background 0.2s, transform 0.2s;
+      transition: opacity 0.2s, transform 0.2s;
     }
-    .drawer-cta-btn:hover { background: #1a43d4; transform: translateY(-1px); }
+    .drawer-cta-btn:hover { opacity: 0.88; transform: translateY(-1px); }
 
     /* ══════════════════════════════════════════════════════
        MEGA BACKDROP + PANELS
@@ -379,16 +380,90 @@
       position: absolute;
       inset: 0 auto auto 0;
       width: 100%;
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      box-shadow: 0 20px 60px rgba(15,20,80,0.12);
+      background: #f0f6ff;
+      border-bottom: 1px solid rgba(34,84,244,0.14);
+      box-shadow: 0 24px 80px rgba(15,20,80,0.16);
       padding: 36px 52px 44px;
       display: none;
       opacity: 0;
       transform: translateY(-10px);
       pointer-events: none;
+      overflow: hidden;
     }
+
+    /* Rotated light-streak image — bold and visible */
+    .mega-panel::after {
+      content: '';
+      position: absolute;
+      right: -8%;
+      top: -80%;
+      width: 58%;
+      height: 320%;
+      background: url('https://images.pexels.com/photos/34062752/pexels-photo-34062752.jpeg') center center / cover no-repeat;
+      transform: rotate(-18deg);
+      opacity: 0.42;
+      z-index: 0;
+      pointer-events: none;
+      border-radius: 32px;
+    }
+
+    /* Left-side fade so text area stays fully clean */
+    .mega-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to right,
+        #f0f6ff 0%,
+        #f0f6ff 38%,
+        rgba(240,246,255,0.82) 58%,
+        rgba(240,246,255,0.18) 78%,
+        transparent 100%
+      );
+      z-index: 1;
+      pointer-events: none;
+    }
+
     .mega-panel.open { display: flex; pointer-events: auto; }
+
+    /* All content above image layers */
+    .mega-inner { position: relative; z-index: 2; }
+
+    /* ── Mega text — crisp dark-on-light ── */
+    .mega-label { color: var(--accent); }
+    .mega-label::after { background: var(--border); }
+    .mega-col { border-right-color: rgba(34,84,244,0.1); }
+    .mega-col-head { color: var(--muted); }
+    .mega-group-title { color: var(--ink); border-left-color: var(--accent); }
+    .mega-links a { color: var(--muted); }
+    .mega-links a:hover { color: var(--accent); background: var(--accent-lt); padding-left: 15px; }
+    .mega-featured { border-left-color: rgba(34,84,244,0.1); }
+    .feat-tag { color: var(--accent); }
+    .feat-card { background: rgba(255,255,255,0.78); border-color: rgba(34,84,244,0.12); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .feat-card:hover { border-color: var(--accent); background: rgba(255,255,255,0.95); box-shadow: 0 6px 24px rgba(34,84,244,0.12); }
+    .feat-card-title { color: var(--ink); }
+    .feat-card-desc { color: var(--muted); }
+    .partner-pill { background: rgba(255,255,255,0.72); border-color: var(--border); color: var(--ink-mid); }
+    .partner-pill:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 2px 12px rgba(34,84,244,0.1); }
+    .about-icon { background: rgba(255,255,255,0.72); border-color: var(--border); }
+    .about-link-text { color: var(--ink-mid); }
+    .about-link:hover { background: rgba(255,255,255,0.6); }
+    .about-link:hover .about-link-text { color: var(--accent); }
+    .about-logos-label { color: var(--muted); }
+    .about-logo-img { filter: brightness(0) saturate(100%); opacity: 0.65; }
+    .about-logo-img:hover { opacity: 1; }
+
+    /* ── Mobile: strip decorative image, keep white panel ── */
+    @media (max-width: 1024px) {
+      .mega-panel::after { display: none; }
+      .mega-panel::before {
+        background: #ffffff;
+      }
+      .mega-panel {
+        background: #ffffff;
+        padding: 28px 32px 36px;
+      }
+    }
 
     .mega-inner {
       max-width: 1320px;
@@ -861,11 +936,11 @@
 <section id="showcase" class="showcase-section">
   <div class="carousel-viewport">
     <div class="carousel-track" id="carouselTrack">
-      <div class="sc-card sc-card--logo"><img src="https://cdn.fastpixel.io/fp/ret_img+v_e662+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F07%2FFrame-1973341828.svg" alt="" /></div>
-      <div class="sc-card sc-card--logo"><img src="https://cdn.fastpixel.io/fp/ret_img+v_67f1+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F05%2FFrame-1973341655.svg" alt="" /></div>
-      <div class="sc-card sc-card--logo"><img src="https://cdn.fastpixel.io/fp/ret_img+v_fbb2+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F10%2FMagnit_Global-Supplier-Exclence-Award-2024_grey.svg" alt="" /></div>
-      <div class="sc-card sc-card--logo"><img src="https://cdn.fastpixel.io/fp/ret_img+v_fb5e+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F07%2FFrame-1973341827.svg" alt="" /></div>
-      <div class="sc-card sc-card--logo"><img src="https://cdn.fastpixel.io/fp/ret_img+v_2c89+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F05%2FFrame-1973341653.svg" alt="" /></div>
+      <div class="sc-card sc-card--logo"><div class="sc-card-frost"></div><img src="https://cdn.fastpixel.io/fp/ret_img+v_e662+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F07%2FFrame-1973341828.svg" alt="" /></div>
+      <div class="sc-card sc-card--logo" style="--orb-delay:1.4s"><div class="sc-card-frost"></div><img src="https://cdn.fastpixel.io/fp/ret_img+v_67f1+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F05%2FFrame-1973341655.svg" alt="" /></div>
+      <div class="sc-card sc-card--logo" style="--orb-delay:2.8s"><div class="sc-card-frost"></div><img src="https://cdn.fastpixel.io/fp/ret_img+v_fbb2+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F10%2FMagnit_Global-Supplier-Exclence-Award-2024_grey.svg" alt="" /></div>
+      <div class="sc-card sc-card--logo" style="--orb-delay:0.7s"><div class="sc-card-frost"></div><img src="https://cdn.fastpixel.io/fp/ret_img+v_fb5e+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F07%2FFrame-1973341827.svg" alt="" /></div>
+      <div class="sc-card sc-card--logo" style="--orb-delay:2.1s"><div class="sc-card-frost"></div><img src="https://cdn.fastpixel.io/fp/ret_img+v_2c89+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F05%2FFrame-1973341653.svg" alt="" /></div>
     </div>
     <div class="carousel-fade carousel-fade--left"></div>
     <div class="carousel-fade carousel-fade--right"></div>
@@ -892,8 +967,149 @@
 .carousel-track { display: flex; gap: 18px; width: max-content; padding: 8px 0 16px; will-change: transform; }
 .sc-card { flex-shrink: 0; width: 300px; height: 400px; border-radius: 16px; overflow: hidden; background: #eaeaef; }
 .sc-card img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
-.sc-card--logo { background: #000 !important; display: flex; align-items: center; justify-content: center; }
-.sc-card--logo img { object-fit: contain; padding: 40px; filter: brightness(0) invert(1); width: 100%; height: 100%; }
+/* ══════════════════════════════════════════
+   EPIC ABSTRACT LOGO CARD BACKGROUNDS
+══════════════════════════════════════════ */
+.sc-card--logo {
+  background: #06081a !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Layer 1: Rotating aurora conic gradient ── */
+.sc-card--logo::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    from 0deg at 40% 55%,
+    transparent          0deg,
+    rgba(34,84,244,0.30) 50deg,
+    rgba(99,50,255,0.22) 110deg,
+    transparent          170deg,
+    rgba(0,180,255,0.18) 230deg,
+    rgba(34,84,244,0.25) 290deg,
+    transparent          360deg
+  );
+  animation: auroraRotate 14s linear infinite;
+  animation-delay: var(--orb-delay, 0s);
+  filter: blur(18px);
+  z-index: 0;
+}
+
+@keyframes auroraRotate {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Layer 2: Diagonal scan-line beams ── */
+.sc-card--logo::after {
+  content: '';
+  position: absolute;
+  inset: -100%;
+  background: repeating-linear-gradient(
+    55deg,
+    transparent           0px,
+    transparent           28px,
+    rgba(255,255,255,0.025) 28px,
+    rgba(255,255,255,0.025) 30px
+  );
+  animation: beamSlide 6s linear infinite;
+  z-index: 1;
+}
+
+@keyframes beamSlide {
+  0%   { transform: translateX(-80px) translateY(-80px); }
+  100% { transform: translateX(80px)  translateY(80px); }
+}
+
+/* ── Layer 3: Dot-grid + ambient glow ── */
+.sc-card--logo .sc-card-frost {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.18) 1px, transparent 1px),
+    radial-gradient(ellipse at 60% 20%, rgba(80,130,255,0.18) 0%, transparent 52%),
+    radial-gradient(ellipse at 25% 80%, rgba(160,80,255,0.14) 0%, transparent 48%);
+  background-size: 22px 22px, 100% 100%, 100% 100%;
+  z-index: 2;
+  animation: gridPulse 8s ease-in-out infinite alternate;
+  animation-delay: var(--orb-delay, 0s);
+}
+
+@keyframes gridPulse {
+  0%   { opacity: 0.65; }
+  100% { opacity: 1.0;  }
+}
+
+/* ── Layer 4: Rotating hexagon wireframe ── */
+.sc-card--logo .sc-card-frost::before {
+  content: '';
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  border: 1px solid rgba(100,150,255,0.22);
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  animation: hexSpin 12s linear infinite;
+  animation-delay: var(--orb-delay, 0s);
+  z-index: 3;
+}
+
+@keyframes hexSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Layer 5: Pulsing ring ── */
+.sc-card--logo .sc-card-frost::after {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  border: 1px solid rgba(100,100,255,0.14);
+  border-radius: 50%;
+  animation: ringPulse 5s ease-in-out infinite;
+  animation-delay: var(--orb-delay, 0s);
+  z-index: 3;
+}
+
+@keyframes ringPulse {
+  0%   { transform: scale(0.85); opacity: 0.8; }
+  50%  { transform: scale(1.1);  opacity: 0.3; }
+  100% { transform: scale(0.85); opacity: 0.8; }
+}
+
+/* ── Logo image: sits on top of everything ── */
+.sc-card--logo img {
+  position: relative;
+  z-index: 10;
+  object-fit: contain;
+  padding: 44px;
+  filter: brightness(0) invert(1);
+  width: 100%;
+  height: 100%;
+  opacity: 0.95;
+  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+
+.sc-card--logo:hover img {
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+/* ── Mobile: reduce complexity for perf ── */
+@media (max-width: 640px) {
+  .sc-card--logo::before { filter: blur(22px); }
+  .sc-card--logo .sc-card-frost::before,
+  .sc-card--logo .sc-card-frost::after { display: none; }
+}
 .carousel-fade { position: absolute; top: 0; height: 100%; width: 180px; pointer-events: none; z-index: 2; }
 .carousel-fade--left  { left:0;  background: linear-gradient(to right, #fff, transparent); }
 .carousel-fade--right { right:0; background: linear-gradient(to left,  #fff, transparent); }
@@ -1442,6 +1658,14 @@
 ══════════════════════════════════════════════════════════ -->
 <section class="orbit-wrap" id="orbitWrap">
   <div class="orbit-stage" id="orbitStage">
+    <!-- Background image clipped to match inner orbit ring -->
+    <div class="orbit-bg-circle" aria-hidden="true">
+      <div class="orbit-bg-img-wrap" id="obg0"><img class="orbit-bg-img" src="https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg" alt="" /></div>
+      <div class="orbit-bg-img-wrap" id="obg1"><img class="orbit-bg-img" src="https://images.pexels.com/photos/8386434/pexels-photo-8386434.jpeg" alt="" /></div>
+      <div class="orbit-bg-img-wrap" id="obg2"><img class="orbit-bg-img" src="https://images.pexels.com/photos/1148820/pexels-photo-1148820.jpeg" alt="" /></div>
+      <div class="orbit-bg-img-wrap" id="obg3"><img class="orbit-bg-img" src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg" alt="" /></div>
+      <div class="orbit-bg-frost"></div>
+    </div>
     <svg class="orbit-svg" id="orbitSvg" viewBox="0 0 1440 700" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
       <ellipse id="outerOval" cx="720" cy="350" rx="820" ry="270" fill="none" stroke="rgba(13,17,39,0.22)" stroke-width="1.8" stroke-dasharray="6 9"/>
       <circle id="orbitRing" cx="720" cy="350" r="270" fill="none" stroke="rgba(13,17,39,0.22)" stroke-width="1.8" stroke-dasharray="6 9"/>
@@ -1461,20 +1685,91 @@
 </section>
 
 <style>
-.orbit-wrap { background: #ffffff; position: relative; z-index: 1; }
-.orbit-stage { position: relative; width: 100%; height: 100vh; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ffffff; overflow: hidden; z-index: 1; }
+/* ══════════════════════════════════════════
+   ORBIT SECTION — White + Image inside ring
+══════════════════════════════════════════ */
+.orbit-wrap  { background: #ffffff; position: relative; z-index: 1; }
+.orbit-stage {
+  position: relative; width: 100%; height: 100vh; min-height: 560px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #ffffff; overflow: hidden; z-index: 1;
+}
+
+/* ── Image circle — slightly inset so ring arrows show outside ── */
+.orbit-bg-circle {
+  position: absolute;
+  top: 50%; left: 50%;
+  translate: -50% -50%;
+  width:  calc(min(37.5vw, 77.1vh) - 32px);
+  height: calc(min(37.5vw, 77.1vh) - 32px);
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 2;
+  box-shadow: 0 0 0 1.5px rgba(13,17,39,0.14), 0 8px 48px rgba(13,17,39,0.13);
+}
+
+/* Per-slide image wrappers stack on top of each other */
+.orbit-bg-img-wrap {
+  position: absolute; inset: 0;
+  opacity: 0;
+}
+.orbit-bg-img-wrap:first-child { opacity: 1; }
+
+.orbit-bg-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  display: block;
+}
+
+/* Frosted overlay on top of all images */
+.orbit-bg-frost {
+  position: absolute; inset: 0; z-index: 3;
+  background: radial-gradient(ellipse 90% 90% at 50% 50%,
+    rgba(8, 12, 36, 0.50) 0%,
+    rgba(8, 12, 36, 0.62) 100%
+  );
+  backdrop-filter: blur(2px) saturate(1.15);
+  -webkit-backdrop-filter: blur(2px) saturate(1.15);
+}
+
+/* ── Eyebrow — white (sits over the circle) ── */
 .orbit-eyebrow { position: relative; z-index: 20; text-align: center; margin-bottom: 44px; pointer-events: none; user-select: none; }
-.orbit-heading { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 700; color: #0d1127; letter-spacing: -0.03em; line-height: 1.13; }
+.orbit-heading {
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.03em; line-height: 1.13;
+  text-shadow: 0 1px 18px rgba(0,0,0,0.45);
+}
+
 .orbit-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+
+/* ── Slide content ── */
 .orbit-content { position: relative; z-index: 10; width: min(460px, 78vw); height: 200px; text-align: center; pointer-events: none; }
 .os-slide { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 10px; opacity: 0; will-change: opacity, transform; pointer-events: none; }
 .os-slide.is-current { pointer-events: auto; }
-.os-icon { width: 38px; height: 38px; color: #0d1127; margin: 0 auto 14px; flex-shrink: 0; }
+.os-icon { width: 38px; height: 38px; color: rgba(255,255,255,0.92); margin: 0 auto 14px; flex-shrink: 0; }
 .os-icon svg { width: 100%; height: 100%; }
-.os-title { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; font-size: clamp(1.2rem, 2.4vw, 1.6rem); font-weight: 600; color: #0d1127; letter-spacing: -0.022em; line-height: 1.16; margin-bottom: 10px; }
-.os-tags { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; font-size: clamp(0.72rem, 0.95vw, 0.82rem); font-weight: 400; color: #6b7280; line-height: 1.9; }
+.os-title {
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem); font-weight: 600;
+  color: #ffffff; letter-spacing: -0.022em; line-height: 1.16; margin-bottom: 10px;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.4);
+}
+.os-tags {
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+  font-size: clamp(0.72rem, 0.95vw, 0.82rem); font-weight: 400;
+  color: rgba(255,255,255,0.70); line-height: 1.9;
+}
+
+/* ── Mobile ── */
 @media (max-width: 640px) {
   .orbit-stage { min-height: 100svh; height: 100svh; }
+  .orbit-bg-circle {
+    width:  calc(min(82.2vw, 80svh) - 20px);
+    height: calc(min(82.2vw, 80svh) - 20px);
+  }
   .orbit-eyebrow { position: relative; margin-bottom: 20px; width: 80vw; text-align: center; transform: none; top: auto; left: auto; }
   .orbit-heading { font-size: clamp(1.05rem, 4.5vw, 1.3rem); line-height: 1.2; letter-spacing: -0.02em; }
   .orbit-content { position: relative; transform: none; top: auto; left: auto; width: min(220px, 68vw); height: 130px; text-align: center; }
@@ -1495,6 +1790,7 @@
   const {CX,CY,R}=GEO;
   function circleAt(t){ return {x:CX+R*Math.cos(t),y:CY+R*Math.sin(t),ang:180+t*(180/Math.PI)}; }
   const wrap=document.getElementById('orbitWrap'),markers=['om0','om1','om2','om3'].map(id=>document.getElementById(id)),slides=Array.from(document.querySelectorAll('.os-slide')),N=slides.length;
+  const bgImgs=['obg0','obg1','obg2','obg3'].map(id=>document.getElementById(id));
   const SCROLL_MULT=N+2.5; wrap.style.height=`${Math.round(window.innerHeight*SCROLL_MULT)}px`;
   function placeMarkers(t){ markers.forEach((m,i)=>{ const {x,y,ang}=circleAt(t+i*(Math.PI/2)); m.setAttribute('transform',`translate(${x},${y}) rotate(${ang})`); }); }
   let activeIdx=-1; const tweens=new Array(N).fill(null);
@@ -1503,6 +1799,9 @@
     if(prev>=0&&tweens[prev]){tweens[prev].kill();tweens[prev]=null;}
     if(tweens[idx]){tweens[idx].kill();tweens[idx]=null;}
     const nextSlide=slides[idx];
+    // Crossfade background images
+    if(prev>=0&&bgImgs[prev]) gsap.to(bgImgs[prev],{opacity:0,duration:0.6,ease:'power2.inOut'});
+    if(bgImgs[idx]) gsap.to(bgImgs[idx],{opacity:1,duration:0.6,ease:'power2.inOut'});
     if(prev<0){nextSlide.classList.add('is-current');gsap.set(nextSlide,{opacity:1,y:0,scale:1});return;}
     const prevSlide=slides[prev]; prevSlide.classList.remove('is-current');
     const tl=gsap.timeline();
@@ -1588,6 +1887,7 @@
 
   <!-- LEFT: Sticky panel -->
   <div class="em-left">
+    <canvas id="emParticleCanvas"></canvas>
     <div class="em-left-inner">
       <span class="em-pill">How We Deliver</span>
       <h2 class="em-heading">Engagement Models Designed For Regulated Enterprises</h2>
@@ -1738,32 +2038,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(145deg, #0d1b4b 0%, #1a2f8a 45%, #2254f4 100%);
+  background: #0b0d14;
   overflow: hidden;
 }
 
-/* Subtle noise texture overlay */
-.em-left::after {
-  content: '';
+/* Particle canvas fills left panel */
+#emParticleCanvas {
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  opacity: 0.04;
-  pointer-events: none;
+  width: 100%;
+  height: 100%;
   z-index: 0;
-}
-
-/* Decorative grid lines */
-.em-left::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-  background-size: 40px 40px;
   pointer-events: none;
-  z-index: 0;
 }
 
 .em-left-inner {
@@ -1895,7 +2181,7 @@
 
 /* Card number */
 .em-num {
-  font-family: 'SF Mono', 'Fira Mono', 'Courier New', monospace;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -1905,7 +2191,7 @@
 
 /* Card title */
 .em-card-title {
-  font-family: 'SF Mono', 'Fira Mono', 'Courier New', monospace;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
   font-size: clamp(0.88rem, 1.1vw, 1rem);
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -2177,15 +2463,29 @@
 
 .careers-row:last-child { border-bottom: none; }
 
-/* Blue gradient on hover */
+/* Per-row unique hover gradients */
 .careers-row::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, #1230c4 0%, #2254f4 45%, #4f7cff 100%);
   opacity: 0;
   transition: opacity 0.38s cubic-bezier(0.16,1,0.3,1);
   z-index: 0;
+}
+
+/* Row 1 — AI Lab: Electric violet → indigo */
+.careers-row:nth-child(1)::before {
+  background: linear-gradient(120deg, #4f22d4 0%, #7c3aed 45%, #a78bfa 100%);
+}
+
+/* Row 2 — CoEs: Deep teal → cyan */
+.careers-row:nth-child(2)::before {
+  background: linear-gradient(120deg, #0e7490 0%, #0891b2 45%, #22d3ee 100%);
+}
+
+/* Row 3 — Accelerators: Burnt orange → warm amber */
+.careers-row:nth-child(3)::before {
+  background: linear-gradient(120deg, #c2410c 0%, #ea580c 45%, #fb923c 100%);
 }
 
 .careers-row:hover::before { opacity: 1; }
@@ -2274,10 +2574,25 @@
   display: block;
 }
 
+/* Arrow hover — matches each row's color */
 .careers-row:hover .careers-arrow-box {
-  background: #38bdf8;
-  border-color: #38bdf8;
+  background: rgba(255,255,255,0.22);
+  border-color: rgba(255,255,255,0.5);
   color: #ffffff;
+}
+
+/* Per-row arrow accent */
+.careers-row:nth-child(1):hover .careers-arrow-box {
+  background: rgba(167,139,250,0.35);
+  border-color: rgba(167,139,250,0.6);
+}
+.careers-row:nth-child(2):hover .careers-arrow-box {
+  background: rgba(34,211,238,0.28);
+  border-color: rgba(34,211,238,0.55);
+}
+.careers-row:nth-child(3):hover .careers-arrow-box {
+  background: rgba(251,146,60,0.3);
+  border-color: rgba(251,146,60,0.55);
 }
 
 .careers-row:hover .careers-arrow-svg {
@@ -2718,7 +3033,7 @@
 </section>
 
 <style>
-.news-section { position: relative; z-index: 2; background: #f5f4ef; padding-bottom: 80px; }
+.news-section { position: relative; z-index: 2; background: #ffffff; padding-bottom: 80px; }
 .news-heading-row { display: flex; align-items: flex-start; justify-content: flex-start; padding: 72px 52px 56px; pointer-events: none; user-select: none; }
 .news-hl { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; font-size: clamp(5rem, 13vw, 13rem); font-weight: 200; letter-spacing: -0.04em; line-height: 0.9; color: #0d1127; }
 .news-hl--purpose { font-size: clamp(2.8rem, 6vw, 7rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; color: #0d1127; font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; }
@@ -2744,7 +3059,7 @@
 .news-nav { display: flex; justify-content: flex-end; gap: 8px; padding: 28px 52px 0; }
 .news-nav-btn { width: 44px; height: 44px; border-radius: 4px; border: 1.5px solid rgba(13,17,39,0.18); background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #0d1127; transition: border-color 0.2s, background 0.2s, color 0.2s; }
 .news-nav-btn svg { width: 18px; height: 18px; }
-.news-nav-btn:hover { background: #0d1127; border-color: #0d1127; color: #ffffff; }
+.news-nav-btn:hover { background: linear-gradient(145deg, #0d1b4b 0%, #1a2f8a 45%, #2254f4 100%); border-color: transparent; color: #ffffff; }
 @media (max-width: 1024px) { .news-card{flex:0 0 calc(50% - 6px);} .news-heading-row{padding:48px 32px 40px;} .news-track-wrap{padding:0 32px;} .news-nav{padding:24px 32px 0;} }
 @media (max-width: 640px) { .news-card{flex:0 0 85vw;aspect-ratio:2/3;} .news-heading-row{padding:36px 24px 32px;} .news-hl--purpose{font-size:clamp(2rem,9vw,3.5rem);} .news-track-wrap{padding:0 24px;} .news-nav{padding:20px 24px 0;} .nc-industry{font-size:clamp(1.8rem,7vw,2.8rem);} .nc-arrow{width:36px;height:36px;bottom:16px;right:16px;} }
 </style>
@@ -2787,15 +3102,15 @@
 </section>
 
 <style>
-.cta-band { background: #dff0ee; padding: 100px 52px; position: relative; z-index: 2; }
+.cta-band { background: #ffffff; padding: 100px 52px; position: relative; z-index: 2; border-top: 1px solid rgba(13,17,39,0.08); }
 .cta-band-inner { max-width: 640px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 32px; }
 .cta-band-logo { height: 42px; width: auto; filter: brightness(0); opacity: 0.85; }
 .cta-band-text { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; font-size: clamp(1.3rem, 2.6vw, 2rem); font-weight: 500; color: #0d1127; line-height: 1.45; letter-spacing: -0.025em; position: relative; display: inline-block; }
 .cta-band-text::before,.cta-band-text::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; opacity: 0; }
 .cta-band-text::before { color: #2254f4; }
 .cta-band-text::after  { color: #e11d48; }
-.cta-band-btn { display: inline-flex; align-items: center; padding: 12px 28px; background: #0d1127; color: #ffffff; font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; font-size: 0.82rem; font-weight: 600; border-radius: 5px; letter-spacing: 0.01em; transition: background 0.2s, transform 0.22s cubic-bezier(0.16,1,0.3,1), box-shadow 0.22s; }
-.cta-band-btn:hover { background: #1a2550; transform: translateY(-2px); box-shadow: 0 10px 32px rgba(13,17,39,0.18); }
+.cta-band-btn { display: inline-flex; align-items: center; padding: 12px 28px; background: linear-gradient(145deg, #0d1b4b 0%, #1a2f8a 45%, #2254f4 100%); color: #ffffff; font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; font-size: 0.82rem; font-weight: 600; border-radius: 5px; letter-spacing: 0.01em; border: none; transition: opacity 0.2s, transform 0.22s cubic-bezier(0.16,1,0.3,1), box-shadow 0.22s; }
+.cta-band-btn:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 10px 32px rgba(34,84,244,0.32); }
 @media (max-width: 640px) { .cta-band { padding: 72px 24px; } .cta-band-text { font-size: clamp(1.1rem, 5vw, 1.4rem); } }
 </style>
 
@@ -2826,9 +3141,9 @@
 
 <style>
 .site-footer-light {
-  --fl-bg:       #f5f0e8;
-  --fl-bg-top:   #ede8de;
-  --fl-bg-bot:   #e8e2d6;
+  --fl-bg:       #ffffff;
+  --fl-bg-top:   #ffffff;
+  --fl-bg-bot:   #f8f9fc;
   --fl-ink:      #1a1a1a;
   --fl-ink-mid:  #3d3b36;
   --fl-ink-soft: #6b6760;
@@ -2859,7 +3174,7 @@
   position: absolute; top: -120px; left: 50%;
   transform: translateX(-50%);
   width: 900px; height: 400px;
-  background: radial-gradient(ellipse, rgba(255,245,220,0.7) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgba(34,84,244,0.04) 0%, transparent 70%);
   pointer-events: none; z-index: 0;
 }
 .fl-top {
@@ -2875,16 +3190,16 @@
 .fl-logo:hover { opacity: .6; }
 .fl-tagline { font-size: clamp(.84rem,1vw,.92rem); font-weight: 400; color: var(--fl-ink-soft); line-height: 1.76; max-width: 420px; letter-spacing: .01em; }
 .fl-subscribe { display: flex; align-items: stretch; margin-top: 4px; }
-.fl-subscribe input { flex: 1; max-width: 256px; background: rgba(255,255,255,0.7); border: 1.5px solid var(--fl-border-md); border-right: none; border-radius: 7px 0 0 7px; padding: 11px 16px; font-family: var(--fl-font); font-size: .8rem; color: var(--fl-ink); outline: none; transition: border-color .2s, background .2s; }
+.fl-subscribe input { flex: 1; max-width: 256px; background: #f5f6fa; border: 1.5px solid var(--fl-border-md); border-right: none; border-radius: 7px 0 0 7px; padding: 11px 16px; font-family: var(--fl-font); font-size: .8rem; color: var(--fl-ink); outline: none; transition: border-color .2s, background .2s; }
 .fl-subscribe input::placeholder { color: var(--fl-muted); }
 .fl-subscribe input:focus { border-color: var(--fl-accent); background: #fff; }
-.fl-subscribe button { padding: 0 22px; background: var(--fl-ink); border: 1.5px solid var(--fl-ink); border-radius: 0 7px 7px 0; font-family: var(--fl-font); font-size: .78rem; font-weight: 700; color: #fff; cursor: pointer; white-space: nowrap; transition: background .2s, border-color .2s; }
-.fl-subscribe button:hover { background: var(--fl-accent); border-color: var(--fl-accent); }
+.fl-subscribe button { padding: 0 22px; background: linear-gradient(145deg, #0d1b4b 0%, #1a2f8a 45%, #2254f4 100%); border: none; border-radius: 0 7px 7px 0; font-family: var(--fl-font); font-size: .78rem; font-weight: 700; color: #fff; cursor: pointer; white-space: nowrap; transition: opacity .2s; }
+.fl-subscribe button:hover { opacity: 0.85; }
 .fl-social { display: flex; flex-direction: column; align-items: flex-end; gap: 16px; padding-top: 2px; }
 .fl-social-label { font-size: .6rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--fl-muted); }
 .fl-social-icons { display: flex; align-items: center; gap: 7px; }
-.fl-social-btn { width: 40px; height: 40px; border-radius: 9px; border: 1.5px solid var(--fl-border-md); background: rgba(255,255,255,0.55); display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--fl-ink-soft); transition: background .22s, border-color .22s, color .22s, transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s; }
-.fl-social-btn:hover { background: var(--fl-accent); border-color: var(--fl-accent); color: #fff; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(34,84,244,0.22); }
+.fl-social-btn { width: 40px; height: 40px; border-radius: 9px; border: 1.5px solid var(--fl-border-md); background: #f5f6fa; display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--fl-ink-soft); transition: background .22s, border-color .22s, color .22s, transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s; }
+.fl-social-btn:hover { background: linear-gradient(145deg, #0d1b4b 0%, #1a2f8a 45%, #2254f4 100%); border-color: transparent; color: #fff; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(34,84,244,0.22); }
 .fl-social-btn svg { width: 16px; height: 16px; display: block; }
 .fl-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(5,1fr); padding: 0 64px; border-bottom: 1px solid var(--fl-border); }
 .fl-col { padding: 48px 28px 48px 0; border-right: 1px solid var(--fl-border); }
@@ -2898,7 +3213,7 @@
 .fl-col-link:hover { color: var(--fl-accent); background: var(--fl-accent-lt); padding-left: 15px; }
 .fl-col-link:hover::before { height: 16px; }
 .fl-badge { display: inline-block; padding: 2px 7px; background: rgba(34,84,244,0.1); border: 1px solid rgba(34,84,244,.22); border-radius: 20px; font-size: .57rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--fl-accent); flex-shrink: 0; line-height: 1.4; }
-.fl-locations { position: relative; z-index: 1; display: flex; align-items: center; padding: 0 64px; border-bottom: 1px solid var(--fl-border); overflow-x: auto; scrollbar-width: none; background: rgba(255,255,255,0.28); }
+.fl-locations { position: relative; z-index: 1; display: flex; align-items: center; padding: 0 64px; border-bottom: 1px solid var(--fl-border); overflow-x: auto; scrollbar-width: none; background: #f8f9fc; }
 .fl-locations::-webkit-scrollbar { display: none; }
 .fl-loc { display: flex; align-items: center; gap: 11px; padding: 22px 48px 22px 0; border-right: 1px solid var(--fl-border); margin-right: 48px; white-space: nowrap; flex-shrink: 0; }
 .fl-loc:last-child { border-right: none; margin-right: 0; }
@@ -3285,12 +3600,99 @@ void main(){
     return pos;
   }
 
+  // ── Celsior SVG logo → particle positions ──────────────────────────
+  // Key insight: shader does pos*2-1, mesh has rotation.x=-π/2 (Y↔Z swap).
+  // So in buffer: X=screen-right, Y=depth(ignored visually), Z=screen-up.
+  // We render into a SQUARE canvas so X and Z both span [0,1] symmetrically.
+  // The SVG (125×44) is drawn centred inside the square with aspect-correct padding.
+  function makeCelsiorLogoPositions(count) {
+    const SZ   = 512;   // square canvas — both axes equal
+    const cvs  = document.createElement('canvas');
+    cvs.width  = SZ; cvs.height = SZ;
+    const ctx  = cvs.getContext('2d');
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, SZ, SZ);
+
+    // SVG viewBox: 125 × 44.  Scale to fill ~75% of SZ width, centre vertically.
+    const SVG_W = 125, SVG_H = 44;
+    const drawW = SZ * 0.82;
+    const drawH = drawW * (SVG_H / SVG_W);
+    const offX  = (SZ - drawW) / 2;
+    const offY  = (SZ - drawH) / 2;
+    const sc    = drawW / SVG_W;   // uniform scale factor
+
+    ctx.save();
+    ctx.translate(offX, offY);
+    ctx.scale(sc, sc);
+    ctx.fillStyle = '#fff';
+
+    // ── Dot-grid circles ──
+    const dots = [
+      [107.537,29.6856,2.135],[114.873,29.6856,2.135],
+      [108.772,22.4727,2.135],[116.1,22.4727,2.135],
+      [95.4239,15.2481,2.135],[102.693,15.2481,2.135],[109.975,15.2481,2.135],[117.299,15.2481,2.135],
+      [96.5489,7.92194,2.135],[103.873,7.92194,2.135],[111.197,7.92194,2.135],[118.537,7.92194,2.135],
+    ];
+    for (const [cx,cy,r] of dots) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 1.6, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // ── Letter paths ──
+    const paths = [
+      "M4.83984 29.056 C4.83984 27.2807 5.19939 25.7414 5.92973 24.4492 C6.66007 23.1571 7.69378 22.1683 9.03086 21.4829 C10.3679 20.7975 11.9634 20.4492 13.7949 20.4492 C15.6264 20.4492 16.75 20.7076 17.8398 21.2133 C18.9297 21.7301 19.7949 22.4155 20.4241 23.2807 C21.0533 24.1458 21.4803 25.1458 21.6825 26.2694 L17.1769 26.82 C16.7724 25.1009 15.6601 24.2357 13.8174 24.2357 C11.9747 24.2357 11.4803 24.6402 10.7724 25.4492 C10.0646 26.2582 9.70501 27.4155 9.70501 28.9324 C9.70501 30.4492 10.0646 31.6065 10.7724 32.4043 C11.4803 33.202 12.5028 33.6065 13.8511 33.6065 C15.941 33.6065 17.1207 32.7301 17.4129 30.9661 H21.9522 C21.6825 32.9324 20.8736 34.5054 19.514 35.6739 C18.1545 36.8537 16.2331 37.438 13.7387 37.438 C11.2443 37.438 8.6376 36.6852 7.12074 35.1796 C5.60389 33.6739 4.83984 31.629 4.83984 29.0223 Z",
+      "M22.7847 29.1454 C22.7847 27.3813 23.1555 25.8532 23.8858 24.5611 C24.6274 23.2577 25.6611 22.2577 26.9869 21.5386 C28.3128 20.8195 29.8633 20.46 31.6274 20.46 C34.3465 20.46 36.4476 21.1791 37.9195 22.6285 C39.3914 24.0667 40.133 26.1004 40.133 28.7184 V30.1004 H27.3802 C27.515 31.4487 27.942 32.4487 28.6723 33.0892 C29.4027 33.7296 30.3914 34.0555 31.6611 34.0555 C33.7622 34.0555 35.0543 33.4038 35.515 32.0892 H39.9645 C39.1555 35.6734 36.3465 37.46 31.515 37.46 C26.6836 37.46 26.6161 36.7296 25.0768 35.2689 C23.5487 33.8083 22.7734 31.7633 22.7734 29.1454 Z M34.5937 24.651 C33.9644 24.0892 32.9644 23.8083 31.6049 23.8083 C30.2453 23.8083 29.2116 24.1454 28.6161 24.8195 C28.0206 25.4937 27.6498 26.3364 27.4925 27.3364 H35.6498 C35.5712 26.1116 35.2229 25.2128 34.5824 24.651 Z",
+      "M42.043 15.0557 H46.807 V36.977 H42.043 Z",
+      "M60.4228 32.438 C60.4228 31.9661 60.1981 31.6065 59.7599 31.3593 C59.3217 31.1121 58.5015 30.8986 57.3217 30.7189 L55.479 30.4155 C53.1082 30.0222 51.4116 29.4492 50.3891 28.6852 C49.3779 27.9211 48.8723 26.8088 48.8723 25.3593 C48.8723 23.9099 49.5577 22.629 50.9285 21.7638 C52.2992 20.8986 54.1981 20.4717 56.6251 20.4717 C59.0521 20.4717 61.0296 20.8762 62.2543 21.6739 C63.479 22.4717 64.2768 23.629 64.6363 25.1458 L60.2431 25.6065 C59.861 24.3144 58.6588 23.6739 56.6251 23.6739 C54.5914 23.6739 54.7599 23.82 54.1869 24.1234 C53.6138 24.4155 53.3217 24.82 53.3217 25.3368 C53.3217 25.8537 53.5352 26.1346 53.9509 26.3818 C54.3667 26.629 55.1532 26.8425 56.2768 27.0222 L58.2543 27.3256 C59.9622 27.5953 61.2992 27.9211 62.2655 28.3256 C63.2318 28.7301 63.9172 29.247 64.3329 29.8762 C64.7487 30.5054 64.9509 31.3144 64.9509 32.3031 C64.9509 35.7638 62.2992 37.4942 56.9959 37.4942 C51.6925 37.4942 54.0745 37.3256 52.8498 36.9885 C51.6251 36.6515 50.6139 36.0897 49.8386 35.3031 C49.0633 34.5166 48.6026 33.4492 48.4453 32.0897 H52.9285 C53.1419 32.8425 53.5801 33.393 54.2655 33.7189 C54.9397 34.0447 55.8386 34.2133 56.9509 34.2133 C58.0633 34.2133 58.9397 34.0672 59.5352 33.7638 C60.1307 33.4717 60.4228 33.0335 60.4228 32.4604 Z",
+      "M66.6367 20.9541 H71.4008 V36.9766 H66.6367 Z",
+      "M73.1641 29.0335 C73.1641 27.2582 73.5348 25.7189 74.2877 24.4492 C75.0292 23.1683 76.0966 22.1908 77.4899 21.5054 C78.8832 20.82 80.5124 20.4717 82.3888 20.4717 C85.2427 20.4717 87.4562 21.2133 89.0405 22.6852 C90.6247 24.1571 91.4112 26.2357 91.4112 28.9211 C91.4112 31.6065 91.0405 32.202 90.2877 33.4829 C89.5461 34.7638 88.4787 35.7526 87.0966 36.4492 C85.7146 37.1458 84.0854 37.4942 82.1865 37.4942 C79.3551 37.4942 77.1416 36.7526 75.5461 35.2694 C73.9618 33.7863 73.1641 31.7189 73.1641 29.056 Z M78.0517 28.9661 C78.0517 30.4604 78.4113 31.6065 79.1416 32.4155 C79.8719 33.2245 80.9169 33.629 82.2764 33.629 C83.636 33.629 84.7146 33.2245 85.445 32.4155 C86.1865 31.6065 86.5461 30.4604 86.5461 28.9661 C86.5461 27.4717 86.1753 26.2919 85.445 25.4829 C84.7034 24.6739 83.6584 24.2694 82.2989 24.2694 C80.9393 24.2694 79.8944 24.6739 79.1528 25.4829 C78.4113 26.2919 78.0517 27.4492 78.0517 28.9661 Z",
+      "M93.1875 20.9547 H97.8729 V23.4716 C99.3111 21.6064 101.098 20.6738 103.244 20.6738 C105.39 20.6738 103.794 20.6851 104.075 20.7188 C104.367 20.7525 104.659 20.7862 104.963 20.8311 L104.412 24.8873 C103.738 24.7862 103.154 24.73 102.659 24.73 C101.199 24.73 100.041 25.1233 99.1875 25.8985 C98.3673 26.6514 97.9515 27.5502 97.9515 28.5727 V36.9884 H93.1875 Z",
+      "M68.9767 14.8428 H68.9655 C67.6686 14.8428 66.6172 15.8941 66.6172 17.1911 V17.2023 C66.6172 18.4993 67.6686 19.5506 68.9655 19.5506 H68.9767 C70.2737 19.5506 71.325 18.4993 71.325 17.2023 V17.1911 C71.325 15.8941 70.2737 14.8428 68.9767 14.8428 Z",
+    ];
+    for (const d of paths) { ctx.fill(new Path2D(d)); }
+    ctx.restore();
+
+    // Sample bright pixels
+    const imgData = ctx.getImageData(0, 0, SZ, SZ).data;
+    const candidates = [];
+    for (let y = 0; y < SZ; y++) {
+      for (let x = 0; x < SZ; x++) {
+        if (imgData[(y * SZ + x) * 4] > 128) candidates.push([x, y]);
+      }
+    }
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = (Math.random() * (i + 1)) | 0;
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+
+    // Axis mapping with rotation.x = -π/2 baked in:
+    // The shader does: vec3 pos = mixedPosition*2.-1.
+    // Then: gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.)
+    // modelViewMatrix includes rotation.x = -π/2, which transforms:
+    //   model X  →  screen X  (right)
+    //   model Y  →  screen Z  (depth, into screen)  ← PROBLEM if we put logo Y here
+    //   model Z  →  screen Y  (up)                  ← logo Y must go HERE
+    // So: buf[X]=logo_X, buf[Y]=depth(0.5=flat), buf[Z]=logo_Y(flipped, since canvas Y↓ but screen Y↑)
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const [px, py] = candidates[i % candidates.length];
+      const nx = px / SZ;  // 0..1, left→right
+      const ny = py / SZ;  // 0..1, top→bottom (canvas Y is inverted vs screen Y)
+      pos[i*3]   = nx       + (Math.random() - 0.5) * (1.5 / SZ);  // buf.X → screen right
+      pos[i*3+1] = 0.5      + (Math.random() - 0.5) * 0.006;        // buf.Y → depth (flat)
+      pos[i*3+2] = (1 - ny) + (Math.random() - 0.5) * (1.5 / SZ);  // buf.Z → screen up (flip Y)
+    }
+    return pos;
+  }
+
   const cwParticleShapes = [
     makeSpherePositions(CW_PARTICLE_COUNT),
     makeFlatDiskPositions(CW_PARTICLE_COUNT),
     makeLargeCloudPositions(CW_PARTICLE_COUNT),
     makeSpherePositions(CW_PARTICLE_COUNT, 0.48),
-    makeVerticalDiscPositions(CW_PARTICLE_COUNT),
+    makeCelsiorLogoPositions(CW_PARTICLE_COUNT),   // index 4 — logo reveal
   ];
 
   // ═══════════════════════════════════════════
@@ -3307,18 +3709,21 @@ void main(){
       { position: new THREE.Vector3(0, -0.3, 1),      rotation: new THREE.Euler(1.57, 0, 0),         scale: 1   },
       { position: new THREE.Vector3(8, -1.2, -8.3),   rotation: new THREE.Euler(0.16, -0.91, -0.16), scale: 7   },
       { position: new THREE.Vector3(0, 0, -0.7),      rotation: new THREE.Euler(0, 0, 0),            scale: 5.3 },
-      { position: new THREE.Vector3(1.8, 0.25, 0.1),  rotation: new THREE.Euler(0, 1.57, 0.6),       scale: 1, color: new THREE.Color('#8AB4FC') }
+      // Final step: logo face-on, right-of-centre
+      // buf.X→screen-right, buf.Z→screen-up (with -π/2 rotation baked in)
+      // position.x shifts right; scale 3.4 fills the frame well
+      { position: new THREE.Vector3(0.5, 0.0, 0.0),  rotation: new THREE.Euler(0, 0, 0),  scale: 3.4, color: new THREE.Color('#ffffff') }
     ]
   };
   const cwParticleBConfig = {
     shaderDefaults: {
       uSize: 3, uSpread: [0,0], uNoiseFrequency: 8,
       uNoiseStrength: 0.25, uDelay: 0.3,
-      uBaseColor: new THREE.Color('#CDFAAC'), uAlpha: 0
+      uBaseColor: new THREE.Color('#8AB4FC'), uAlpha: 0
     },
     steps: [
-      { position: new THREE.Vector3(1.8, 0.25, 0.1),   rotation: new THREE.Euler(0, 0, 0.6),     scale: 5 },
-      { position: new THREE.Vector3(1.8, -0.25, -0.2),  rotation: new THREE.Euler(0, 1.57, 0.6),  scale: 1 }
+      { position: new THREE.Vector3(0.5, 0.0, 0.0),  rotation: new THREE.Euler(0, 0, 0),  scale: 3.4 },
+      { position: new THREE.Vector3(0.5, 0.0, 0.0),  rotation: new THREE.Euler(0, 0, 0),  scale: 3.4 }
     ]
   };
 
@@ -3374,37 +3779,13 @@ void main(){
 
   const cwParticleA = cwCreateParticleSystem(cwParticleAConfig, 0, 1);
   cwScene.add(cwParticleA.points);
-  const cwParticleB = cwCreateParticleSystem(cwParticleBConfig, 0, 4);
+  const cwParticleB = cwCreateParticleSystem(cwParticleBConfig, 4, 4); // logo→logo (fades in as blue overlay)
   cwParticleB.points.visible = false;
-  cwScene.add(cwParticleB.points);
+  // cwParticleB (blue overlay) removed — causes unwanted flash
 
-  // ─── Wireframe layers ───
-  const CW_LAYERS_CONFIG = {
-    position: new THREE.Vector3(8, -0.1, -8.3),
-    rotation: new THREE.Euler(0.16, -0.91, -0.16),
-    width: 8.5, height: 0.8, depth: 14,
-  };
-  const cwLayersGroup = new THREE.Group();
-  cwLayersGroup.position.copy(CW_LAYERS_CONFIG.position);
-  cwLayersGroup.rotation.copy(CW_LAYERS_CONFIG.rotation);
-  const cwBoxMat = new THREE.LineBasicMaterial({ color: 0x4f4f4f, transparent: true, opacity: 0 });
-  cwLayersGroup.add(new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(CW_LAYERS_CONFIG.width, CW_LAYERS_CONFIG.height, CW_LAYERS_CONFIG.depth)), cwBoxMat
-  ));
-  const CW_PLANE_GAP = 0.375;
-  const cwPlaneYPos = [
-    CW_LAYERS_CONFIG.height/2 + 2*CW_PLANE_GAP,
-    -(CW_LAYERS_CONFIG.height/2 + CW_PLANE_GAP),
-    -(CW_LAYERS_CONFIG.height/2 + 3*CW_PLANE_GAP)
-  ];
-  const cwPlaneMeshes = cwPlaneYPos.map(y => {
-    const mat  = new THREE.LineBasicMaterial({ color: 0x8AB4FC, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
-    const mesh = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(CW_LAYERS_CONFIG.width, 0.02, CW_LAYERS_CONFIG.depth)), mat);
-    mesh.position.y = y;
-    cwLayersGroup.add(mesh);
-    return mesh;
-  });
-  cwScene.add(cwLayersGroup);
+  // ─── Wireframe layers permanently removed ───
+  const cwBoxMat    = { opacity: 0 }; // inert dummy — kept so references don't throw
+  const cwPlaneMeshes = [];           // empty array — cwShowLayers/cwHideLayers become no-ops
 
   // ═══════════════════════════════════════════
   // CANVAS CLIP — pixel-clamp canvas to exactly where
@@ -3476,7 +3857,7 @@ void main(){
       cwParticleA.uniforms.uProgress.value = 0;
       if (index+1 === 1) cwShowLayers();
       if (index+1 === 3) cwHideLayers();
-      if (index+1 === 3) cwParticleB.points.visible = true;
+      // cwParticleB disabled
     } else {
       const nextIdx = Math.max(index, 0);
       const prevIdx = Math.max(index - 1, 0);
@@ -3495,7 +3876,7 @@ void main(){
         cwParticleA.state.endRotation   = aSteps[nextIdx].rotation.clone();
       }
       cwParticleA.uniforms.uProgress.value = 0;
-      if (index === 3) cwParticleB.points.visible = false;
+      // cwParticleB disabled
       if (index === 1) cwShowLayers();
       if (index === 1 && direction === -1) cwHideLayers();
     }
@@ -3526,16 +3907,11 @@ void main(){
         cwParticleA.points.rotation.y = cwParticleA.state.startRotation.y + (cwParticleA.state.endRotation.y - cwParticleA.state.startRotation.y) * p;
         cwParticleA.points.rotation.z = cwParticleA.state.startRotation.z + (cwParticleA.state.endRotation.z - cwParticleA.state.startRotation.z) * p;
 
-        if (cwParticleB.points.visible) {
-          cwParticleB.uniforms.uAlpha.value    = Math.max(0, Math.min(1, p / 0.3));
-          cwParticleB.uniforms.uProgress.value = p;
-          cwParticleB.points.position.lerpVectors(cwParticleBConfig.steps[0].position, cwParticleBConfig.steps[1].position, p);
-          cwParticleB.points.scale.setScalar(cwParticleBConfig.steps[0].scale + (cwParticleBConfig.steps[1].scale - cwParticleBConfig.steps[0].scale) * p);
-        }
+        // cwParticleB disabled
 
         if (i === CW_TRANSITION_COUNT - 1) {
-          const blueT = Math.max(0, Math.min(1, p / 0.3));
-          cwParticleA.uniforms.uBaseColor.value.lerpColors(new THREE.Color('#ffffff'), new THREE.Color('#8AB4FC'), blueT);
+          // Keep logo particles crisp white — blue tint comes from cwParticleB overlay
+          cwParticleA.uniforms.uBaseColor.value.set('#ffffff');
         }
 
         const overall = (i + p) / CW_TRANSITION_COUNT;
@@ -3614,6 +3990,206 @@ void main(){
 </script>
 
 
+
+
+<script>
+(function() {
+  const canvas = document.getElementById('emParticleCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  // ── Config ──────────────────────────────────────────
+  const LAYERS = [
+    // { count, zDepth(0=back,1=front), baseSpeed, maxR, baseAlpha, color }
+    { count: 180, z: 0.10, speed: 0.04, maxR: 0.8,  alpha: 0.20, color: '180,200,255' },  // far — tiny, dim
+    { count: 160, z: 0.28, speed: 0.10, maxR: 1.2,  alpha: 0.35, color: '190,210,255' },  // mid-back
+    { count: 120, z: 0.50, speed: 0.20, maxR: 1.6,  alpha: 0.55, color: '210,225,255' },  // mid
+    { count:  80, z: 0.72, speed: 0.36, maxR: 2.2,  alpha: 0.75, color: '225,235,255' },  // mid-front
+    { count:  40, z: 0.90, speed: 0.55, maxR: 3.0,  alpha: 0.92, color: '240,245,255' },  // near — large, bright
+  ];
+  const MAX_CONNECT_DIST = 100; // connection line distance
+  const FOV = 500;              // perspective field-of-view
+
+  let W, H;
+  let scrollVel   = 0;   // GSAP-driven scroll velocity  (0–1)
+  let scrollBoost = 1;   // multiplier applied to speeds
+  let t = 0;
+
+  // ── Resize ───────────────────────────────────────────
+  function resize() {
+    const el = canvas.parentElement;
+    W = canvas.width  = el.offsetWidth;
+    H = canvas.height = el.offsetHeight;
+  }
+
+  // ── Build stars ──────────────────────────────────────
+  let stars = [];
+  function buildStars() {
+    stars = [];
+    for (const L of LAYERS) {
+      for (let i = 0; i < L.count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        stars.push({
+          // 3-D position in a virtual cube (-1..1 on each axis)
+          x3: (Math.random() - 0.5) * 2,
+          y3: (Math.random() - 0.5) * 2,
+          z3: L.z * 0.8 + Math.random() * 0.2 * L.z, // clustered near layer depth
+          // layer ref
+          layer: L,
+          // individual drift direction (polar)
+          driftAngle: angle,
+          driftSpeed: L.speed * (0.7 + Math.random() * 0.6),
+          // twinkle
+          twinkleOffset: Math.random() * Math.PI * 2,
+          twinkleFreq:   Math.random() * 0.03 + 0.008,
+          // size
+          baseR: L.maxR * (0.4 + Math.random() * 0.6),
+        });
+      }
+    }
+    // Sort back-to-front so near stars draw over far ones
+    stars.sort((a, b) => a.layer.z - b.layer.z);
+  }
+
+  // ── Project 3D → 2D (perspective) ───────────────────
+  function project(s) {
+    // z3 in 0..1; closer to 1 = nearer camera
+    const depth = 1 - s.layer.z; // 0=near, 1=far for perspective calc
+    const scale = FOV / (FOV + depth * 400);
+    return {
+      sx: W * 0.5 + s.x3 * W * 0.52 * scale,
+      sy: H * 0.5 + s.y3 * H * 0.52 * scale,
+      scale,
+    };
+  }
+
+  // ── Draw ─────────────────────────────────────────────
+  function draw() {
+    requestAnimationFrame(draw);
+    t += 0.016;
+
+    // Decay scroll boost
+    scrollBoost += (1 - scrollBoost) * 0.06;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Background radial glow (blue tint, depth-aware)
+    const grd = ctx.createRadialGradient(W*0.42, H*0.5, 0, W*0.42, H*0.5, W*0.8);
+    grd.addColorStop(0,   'rgba(24,60,180,0.10)');
+    grd.addColorStop(0.45,'rgba(14,30,100,0.06)');
+    grd.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, H);
+
+    // Projected positions cache (avoid double-computing)
+    const proj = stars.map(project);
+
+    // ── Connection lines (only between stars of adjacent/same layers) ──
+    for (let i = 0; i < stars.length; i++) {
+      const si = stars[i], pi = proj[i];
+      if (si.layer.z < 0.4) continue; // skip back-most layer for perf
+      for (let j = i + 1; j < stars.length; j++) {
+        const sj = stars[j], pj = proj[j];
+        if (Math.abs(si.layer.z - sj.layer.z) > 0.3) continue;
+        const dx = pi.sx - pj.sx, dy = pi.sy - pj.sy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < MAX_CONNECT_DIST) {
+          // Depth-fade: far-layer lines are subtler
+          const depthAlpha = (si.layer.z + sj.layer.z) * 0.5;
+          const lineAlpha  = (1 - dist / MAX_CONNECT_DIST) * 0.16 * depthAlpha;
+          ctx.beginPath();
+          ctx.moveTo(pi.sx, pi.sy);
+          ctx.lineTo(pj.sx, pj.sy);
+          ctx.strokeStyle = `rgba(160,190,255,${lineAlpha})`;
+          ctx.lineWidth = pi.scale * 0.6;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // ── Stars ──
+    for (let i = 0; i < stars.length; i++) {
+      const s  = stars[i];
+      const L  = s.layer;
+      const p  = proj[i];
+      const boost = scrollBoost;
+
+      // Move in 3D (drift in XY plane of the virtual space)
+      const speed = s.driftSpeed * boost;
+      s.x3 += Math.cos(s.driftAngle) * speed * 0.0008;
+      s.y3 += Math.sin(s.driftAngle) * speed * 0.0008;
+
+      // Scroll gives a parallax "zoom" feel — near layers surge forward
+      s.y3 -= L.z * 0.00015 * boost * scrollVel;
+
+      // Wrap edges in 3D space
+      if (s.x3 >  1.05) s.x3 = -1.05;
+      if (s.x3 < -1.05) s.x3 =  1.05;
+      if (s.y3 >  1.05) s.y3 = -1.05;
+      if (s.y3 < -1.05) s.y3 =  1.05;
+
+      // Twinkle
+      const twinkle = Math.sin(t * s.twinkleFreq * 60 + s.twinkleOffset);
+      const a = Math.max(0.05, Math.min(1, L.alpha + twinkle * 0.2));
+
+      const r = s.baseR * p.scale;
+
+      // Glow for foreground stars
+      if (L.z > 0.55) {
+        const glowR = r * (L.z > 0.75 ? 5 : 3.5);
+        const glowA = a * L.z * 0.4;
+        const glow  = ctx.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, glowR);
+        glow.addColorStop(0, `rgba(${L.color},${glowA})`);
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.beginPath();
+        ctx.arc(p.sx, p.sy, glowR, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
+        ctx.fill();
+      }
+
+      // Star dot
+      ctx.beginPath();
+      ctx.arc(p.sx, p.sy, Math.max(0.3, r), 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${L.color},${a})`;
+      ctx.fill();
+    }
+  }
+
+  // ── GSAP ScrollTrigger integration ───────────────────
+  function initScrollTrigger() {
+    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+    const proxy = { vel: 0 };
+    gsap.registerPlugin(ScrollTrigger);
+    ScrollTrigger.create({
+      trigger: '#emSection',
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: true,
+      onUpdate(self) {
+        // self.getVelocity() returns px/s — normalise to a 0-10 range
+        const raw = Math.abs(self.getVelocity()) / 800;
+        scrollVel   = Math.min(raw, 10);
+        // Boost speed proportionally
+        scrollBoost = 1 + Math.min(raw * 1.8, 7);
+      },
+    });
+  }
+
+  // ── Boot ─────────────────────────────────────────────
+  resize();
+  buildStars();
+  window.addEventListener('resize', () => { resize(); buildStars(); });
+
+  // Wait for GSAP to be ready
+  if (document.readyState === 'complete') {
+    initScrollTrigger();
+  } else {
+    window.addEventListener('load', initScrollTrigger);
+  }
+
+  draw();
+})();
+</script>
 
 </body>
 </html>
