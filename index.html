@@ -1690,6 +1690,55 @@
     <div class="cw-scroll-hint" id="cwScrollHint">Scroll to explore</div>
   </div>
 
+  <!-- Gemini star intro overlay — visible only at section start, fades out on scroll -->
+  <div id="cwStarIntro" style="
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 1;
+    transition: opacity 0.6s ease;
+  ">
+    <!-- Pulsing radial glow behind the star -->
+    <div id="cwStarGlow" style="
+      position: absolute;
+      width: 420px; height: 420px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(110,219,143,0.22) 0%, rgba(29,120,66,0.10) 45%, transparent 70%);
+      animation: cwStarPulse 3.2s ease-in-out infinite;
+      pointer-events: none;
+    "></div>
+    <!-- Label beneath the star -->
+    <div style="
+      position: absolute;
+      bottom: calc(50% - 260px);
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(110,219,143,0.72);
+      animation: cwStarLabelFade 3.2s ease-in-out infinite;
+    ">Scroll to reveal</div>
+  </div>
+
+  <style>
+    @keyframes cwStarPulse {
+      0%   { transform: scale(0.85); opacity: 0.4; }
+      50%  { transform: scale(1.15); opacity: 1;   }
+      100% { transform: scale(0.85); opacity: 0.4; }
+    }
+    @keyframes cwStarLabelFade {
+      0%   { opacity: 0.3; }
+      50%  { opacity: 0.85; }
+      100% { opacity: 0.3; }
+    }
+  </style>
+
 </div><!-- end #celsior-wrapper -->
 
 <!-- ══════════════════════════════════════════════════════════
@@ -3740,16 +3789,11 @@
 <script>
 (function () {
   'use strict';
+  if (typeof THREE === 'undefined') { console.warn('Celsior: THREE not loaded'); return; }
 
-  // ── Only run once THREE is ready ──
-  if (typeof THREE === 'undefined') {
-    console.warn('Celsior particle section: THREE.js not loaded');
-    return;
-  }
-
-  // ═══════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════
   // VERTEX SHADER
-  // ═══════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════
   const vertexShader = `
 #define TWO_PI 6.28318530718
 attribute vec3 targetPosition;
@@ -3804,7 +3848,7 @@ void main(){
   float duration=1.-uDelay;float start=(1.-duration)*noise;float end=duration+start;
   float progress=smoothstep(start,end,uProgress);
   if(isStartZero>.5){vFadeAlpha=progress;}
-  else if(isEndZero>.5){float remapped=clamp((progress-0.)/(0.5-0.),0.,1.);vFadeAlpha=mix(1.,0.,remapped);}
+  else if(isEndZero>.5){float remapped=clamp(progress/0.5,0.,1.);vFadeAlpha=mix(1.,0.,remapped);}
   else{vFadeAlpha=1.;}
   vec3 mixedPosition=mix(startPos,endPos,progress);
   mixedPosition=mix(mixedPosition,mixedPosition+((random.xyz*(noise*2.-1.))*uNoiseStrength),1.-abs(uProgress*2.-1.));
@@ -3838,182 +3882,132 @@ void main(){
   gl_FragColor.a=circle*vFadeAlpha*uAlpha;
 }`;
 
-  // ═══════════════════════════════════════════
-  // PARTICLE SHAPES
-  // ═══════════════════════════════════════════
-  const CW_PARTICLE_COUNT = 60000;
+  // ═══════════════════════════════════════════════════════════════════
+  // SHAPES — only two: Gemini star and logo.
+  // Sequence: star (idle, breathing) → slow travel → morph into logo → logo drifts right
+  // ═══════════════════════════════════════════════════════════════════
+  const N = 60000;
 
-  function makeSpherePositions(count, radius){
-    radius = radius || 0.45;
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const phi = Math.acos(1 - 2 * (i + .5) / count);
-      const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-      const r = radius * Math.cbrt(Math.random());
-      pos[i*3]   = r * Math.sin(phi) * Math.cos(theta) + .5;
-      pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) + .5;
-      pos[i*3+2] = r * Math.cos(phi) + .5;
-    }
-    return pos;
-  }
-  function makeFlatDiskPositions(count, radius, thickness) {
-    radius = radius || 0.45; thickness = thickness || 0.04;
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const r = radius * Math.sqrt(Math.random());
-      const theta = Math.random() * Math.PI * 2;
-      pos[i*3]   = r * Math.cos(theta) + .5;
-      pos[i*3+1] = (Math.random() - .5) * thickness + .5;
-      pos[i*3+2] = r * Math.sin(theta) + .5;
-    }
-    return pos;
-  }
-  function makeLargeCloudPositions(count) {
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) { pos[i*3] = Math.random(); pos[i*3+1] = Math.random(); pos[i*3+2] = Math.random(); }
-    return pos;
-  }
-  function makeVerticalDiscPositions(count, radius, thickness) {
-    radius = radius || 0.45; thickness = thickness || 0.02;
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const r = radius * Math.sqrt(Math.random());
-      const theta = Math.random() * Math.PI * 2;
-      pos[i*3]   = (Math.random() - .5) * thickness + .5;
-      pos[i*3+1] = r * Math.cos(theta) + .5;
-      pos[i*3+2] = r * Math.sin(theta) + .5;
-    }
-    return pos;
-  }
+  // 6-pointed Gemini star — rasterised from exact SVG path, with 3D depth scatter.
+  // Axis convention (matches shader rotation.x = -π/2):
+  //   buf.X = screen-right,  buf.Y = depth,  buf.Z = screen-up
+  function makeStar(count) {
+    const SZ = 512;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = SZ;
+    const cx = cv.getContext('2d');
+    cx.fillStyle = '#000';
+    cx.fillRect(0, 0, SZ, SZ);
 
-  // ── Celsior SVG logo → particle positions ──────────────────────────
-  // Key insight: shader does pos*2-1, mesh has rotation.x=-π/2 (Y↔Z swap).
-  // So in buffer: X=screen-right, Y=depth(ignored visually), Z=screen-up.
-  // We render into a SQUARE canvas so X and Z both span [0,1] symmetrically.
-  // The SVG (125×44) is drawn centred inside the square with aspect-correct padding.
-  function makeCelsiorLogoPositions(count) {
-    const SZ   = 512;   // square canvas — both axes equal
-    const cvs  = document.createElement('canvas');
-    cvs.width  = SZ; cvs.height = SZ;
-    const ctx  = cvs.getContext('2d');
+    // Draw the Gemini star scaled to 72% of canvas, centred
+    const drawS = SZ * 0.72;
+    const off   = (SZ - drawS) / 2;
+    cx.save();
+    cx.translate(off, off);
+    cx.scale(drawS / 100, drawS / 100);
+    cx.fillStyle = '#fff';
+    cx.fill(new Path2D('M0 50 L24 43 L10 10 L35 35 L88 0 L48 45 L100 50 L48 55 L88 100 L35 65 L10 90 L24 57 Z'));
+    cx.restore();
 
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, SZ, SZ);
-
-    // SVG viewBox: 125 × 44.  Scale to fill ~75% of SZ width, centre vertically.
-    const SVG_W = 125, SVG_H = 44;
-    const drawW = SZ * 0.82;
-    const drawH = drawW * (SVG_H / SVG_W);
-    const offX  = (SZ - drawW) / 2;
-    const offY  = (SZ - drawH) / 2;
-    const sc    = drawW / SVG_W;   // uniform scale factor
-
-    ctx.save();
-    ctx.translate(offX, offY);
-    ctx.scale(sc, sc);
-    ctx.fillStyle = '#fff';
-
-    // ── Dot-grid circles ──
-    const dots = [
-      [107.537,29.6856,2.135],[114.873,29.6856,2.135],
-      [108.772,22.4727,2.135],[116.1,22.4727,2.135],
-      [95.4239,15.2481,2.135],[102.693,15.2481,2.135],[109.975,15.2481,2.135],[117.299,15.2481,2.135],
-      [96.5489,7.92194,2.135],[103.873,7.92194,2.135],[111.197,7.92194,2.135],[118.537,7.92194,2.135],
-    ];
-    for (const [cx,cy,r] of dots) {
-      ctx.beginPath();
-      ctx.arc(cx, cy, r * 1.6, 0, Math.PI*2);
-      ctx.fill();
-    }
-
-    // ── Letter paths ──
-    const paths = [
-      "M4.83984 29.056 C4.83984 27.2807 5.19939 25.7414 5.92973 24.4492 C6.66007 23.1571 7.69378 22.1683 9.03086 21.4829 C10.3679 20.7975 11.9634 20.4492 13.7949 20.4492 C15.6264 20.4492 16.75 20.7076 17.8398 21.2133 C18.9297 21.7301 19.7949 22.4155 20.4241 23.2807 C21.0533 24.1458 21.4803 25.1458 21.6825 26.2694 L17.1769 26.82 C16.7724 25.1009 15.6601 24.2357 13.8174 24.2357 C11.9747 24.2357 11.4803 24.6402 10.7724 25.4492 C10.0646 26.2582 9.70501 27.4155 9.70501 28.9324 C9.70501 30.4492 10.0646 31.6065 10.7724 32.4043 C11.4803 33.202 12.5028 33.6065 13.8511 33.6065 C15.941 33.6065 17.1207 32.7301 17.4129 30.9661 H21.9522 C21.6825 32.9324 20.8736 34.5054 19.514 35.6739 C18.1545 36.8537 16.2331 37.438 13.7387 37.438 C11.2443 37.438 8.6376 36.6852 7.12074 35.1796 C5.60389 33.6739 4.83984 31.629 4.83984 29.0223 Z",
-      "M22.7847 29.1454 C22.7847 27.3813 23.1555 25.8532 23.8858 24.5611 C24.6274 23.2577 25.6611 22.2577 26.9869 21.5386 C28.3128 20.8195 29.8633 20.46 31.6274 20.46 C34.3465 20.46 36.4476 21.1791 37.9195 22.6285 C39.3914 24.0667 40.133 26.1004 40.133 28.7184 V30.1004 H27.3802 C27.515 31.4487 27.942 32.4487 28.6723 33.0892 C29.4027 33.7296 30.3914 34.0555 31.6611 34.0555 C33.7622 34.0555 35.0543 33.4038 35.515 32.0892 H39.9645 C39.1555 35.6734 36.3465 37.46 31.515 37.46 C26.6836 37.46 26.6161 36.7296 25.0768 35.2689 C23.5487 33.8083 22.7734 31.7633 22.7734 29.1454 Z M34.5937 24.651 C33.9644 24.0892 32.9644 23.8083 31.6049 23.8083 C30.2453 23.8083 29.2116 24.1454 28.6161 24.8195 C28.0206 25.4937 27.6498 26.3364 27.4925 27.3364 H35.6498 C35.5712 26.1116 35.2229 25.2128 34.5824 24.651 Z",
-      "M42.043 15.0557 H46.807 V36.977 H42.043 Z",
-      "M60.4228 32.438 C60.4228 31.9661 60.1981 31.6065 59.7599 31.3593 C59.3217 31.1121 58.5015 30.8986 57.3217 30.7189 L55.479 30.4155 C53.1082 30.0222 51.4116 29.4492 50.3891 28.6852 C49.3779 27.9211 48.8723 26.8088 48.8723 25.3593 C48.8723 23.9099 49.5577 22.629 50.9285 21.7638 C52.2992 20.8986 54.1981 20.4717 56.6251 20.4717 C59.0521 20.4717 61.0296 20.8762 62.2543 21.6739 C63.479 22.4717 64.2768 23.629 64.6363 25.1458 L60.2431 25.6065 C59.861 24.3144 58.6588 23.6739 56.6251 23.6739 C54.5914 23.6739 54.7599 23.82 54.1869 24.1234 C53.6138 24.4155 53.3217 24.82 53.3217 25.3368 C53.3217 25.8537 53.5352 26.1346 53.9509 26.3818 C54.3667 26.629 55.1532 26.8425 56.2768 27.0222 L58.2543 27.3256 C59.9622 27.5953 61.2992 27.9211 62.2655 28.3256 C63.2318 28.7301 63.9172 29.247 64.3329 29.8762 C64.7487 30.5054 64.9509 31.3144 64.9509 32.3031 C64.9509 35.7638 62.2992 37.4942 56.9959 37.4942 C51.6925 37.4942 54.0745 37.3256 52.8498 36.9885 C51.6251 36.6515 50.6139 36.0897 49.8386 35.3031 C49.0633 34.5166 48.6026 33.4492 48.4453 32.0897 H52.9285 C53.1419 32.8425 53.5801 33.393 54.2655 33.7189 C54.9397 34.0447 55.8386 34.2133 56.9509 34.2133 C58.0633 34.2133 58.9397 34.0672 59.5352 33.7638 C60.1307 33.4717 60.4228 33.0335 60.4228 32.4604 Z",
-      "M66.6367 20.9541 H71.4008 V36.9766 H66.6367 Z",
-      "M73.1641 29.0335 C73.1641 27.2582 73.5348 25.7189 74.2877 24.4492 C75.0292 23.1683 76.0966 22.1908 77.4899 21.5054 C78.8832 20.82 80.5124 20.4717 82.3888 20.4717 C85.2427 20.4717 87.4562 21.2133 89.0405 22.6852 C90.6247 24.1571 91.4112 26.2357 91.4112 28.9211 C91.4112 31.6065 91.0405 32.202 90.2877 33.4829 C89.5461 34.7638 88.4787 35.7526 87.0966 36.4492 C85.7146 37.1458 84.0854 37.4942 82.1865 37.4942 C79.3551 37.4942 77.1416 36.7526 75.5461 35.2694 C73.9618 33.7863 73.1641 31.7189 73.1641 29.056 Z M78.0517 28.9661 C78.0517 30.4604 78.4113 31.6065 79.1416 32.4155 C79.8719 33.2245 80.9169 33.629 82.2764 33.629 C83.636 33.629 84.7146 33.2245 85.445 32.4155 C86.1865 31.6065 86.5461 30.4604 86.5461 28.9661 C86.5461 27.4717 86.1753 26.2919 85.445 25.4829 C84.7034 24.6739 83.6584 24.2694 82.2989 24.2694 C80.9393 24.2694 79.8944 24.6739 79.1528 25.4829 C78.4113 26.2919 78.0517 27.4492 78.0517 28.9661 Z",
-      "M93.1875 20.9547 H97.8729 V23.4716 C99.3111 21.6064 101.098 20.6738 103.244 20.6738 C105.39 20.6738 103.794 20.6851 104.075 20.7188 C104.367 20.7525 104.659 20.7862 104.963 20.8311 L104.412 24.8873 C103.738 24.7862 103.154 24.73 102.659 24.73 C101.199 24.73 100.041 25.1233 99.1875 25.8985 C98.3673 26.6514 97.9515 27.5502 97.9515 28.5727 V36.9884 H93.1875 Z",
-      "M68.9767 14.8428 H68.9655 C67.6686 14.8428 66.6172 15.8941 66.6172 17.1911 V17.2023 C66.6172 18.4993 67.6686 19.5506 68.9655 19.5506 H68.9767 C70.2737 19.5506 71.325 18.4993 71.325 17.2023 V17.1911 C71.325 15.8941 70.2737 14.8428 68.9767 14.8428 Z",
-    ];
-    for (const d of paths) { ctx.fill(new Path2D(d)); }
-    ctx.restore();
-
-    // Sample bright pixels
-    const imgData = ctx.getImageData(0, 0, SZ, SZ).data;
-    const candidates = [];
+    const imgData = cx.getImageData(0, 0, SZ, SZ).data;
+    const bright = [], mid = [];
     for (let y = 0; y < SZ; y++) {
       for (let x = 0; x < SZ; x++) {
-        if (imgData[(y * SZ + x) * 4] > 128) candidates.push([x, y]);
+        const v = imgData[(y * SZ + x) * 4];
+        if (v > 180) bright.push([x, y]);
+        else if (v > 50) mid.push([x, y]);
       }
     }
-    for (let i = candidates.length - 1; i > 0; i--) {
-      const j = (Math.random() * (i + 1)) | 0;
-      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    // Shuffle
+    for (const arr of [bright, mid]) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = (Math.random() * (i + 1)) | 0;
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
     }
 
-    // Axis mapping with rotation.x = -π/2 baked in:
-    // The shader does: vec3 pos = mixedPosition*2.-1.
-    // Then: gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.)
-    // modelViewMatrix includes rotation.x = -π/2, which transforms:
-    //   model X  →  screen X  (right)
-    //   model Y  →  screen Z  (depth, into screen)  ← PROBLEM if we put logo Y here
-    //   model Z  →  screen Y  (up)                  ← logo Y must go HERE
-    // So: buf[X]=logo_X, buf[Y]=depth(0.5=flat), buf[Z]=logo_Y(flipped, since canvas Y↓ but screen Y↑)
+    const DEPTH = 0.13; // half-depth of 3D extrusion in buf.Y
     const pos = new Float32Array(count * 3);
+    const nBright = Math.floor(count * 0.68); // tips/edges
+    const nMid    = count - nBright;           // interior fill
+
     for (let i = 0; i < count; i++) {
-      const [px, py] = candidates[i % candidates.length];
-      const nx = px / SZ;  // 0..1, left→right
-      const ny = py / SZ;  // 0..1, top→bottom (canvas Y is inverted vs screen Y)
-      pos[i*3]   = nx       + (Math.random() - 0.5) * (1.5 / SZ);  // buf.X → screen right
-      pos[i*3+1] = 0.5      + (Math.random() - 0.5) * 0.006;        // buf.Y → depth (flat)
-      pos[i*3+2] = (1 - ny) + (Math.random() - 0.5) * (1.5 / SZ);  // buf.Z → screen up (flip Y)
+      let px, py;
+      if (i < nBright) {
+        [px, py] = bright[i % bright.length];
+      } else {
+        [px, py] = mid[(i - nBright) % mid.length];
+      }
+      const isEdge = i < nBright;
+      // 3D depth: tips get full scatter, interior stays flatter
+      const d = (Math.random() - 0.5) * 2 * DEPTH * (isEdge ? 1.0 : 0.3);
+
+      pos[i * 3]     = Math.max(0.01, Math.min(0.99, px / SZ + (Math.random() - 0.5) * 1.8 / SZ));
+      pos[i * 3 + 1] = Math.max(0.01, Math.min(0.99, 0.5 + d));
+      pos[i * 3 + 2] = Math.max(0.01, Math.min(0.99, (1 - py / SZ) + (Math.random() - 0.5) * 1.8 / SZ));
     }
     return pos;
   }
 
-  const cwParticleShapes = [
-    makeSpherePositions(CW_PARTICLE_COUNT),       // 0: sphere
-    makeFlatDiskPositions(CW_PARTICLE_COUNT),     // 1: flat disk
-    makeLargeCloudPositions(CW_PARTICLE_COUNT),   // 2: cloud
-    makeSpherePositions(CW_PARTICLE_COUNT, 0.48), // 3: big sphere (two-sphere moment)
-    makeCelsiorLogoPositions(CW_PARTICLE_COUNT),  // 4: celsior logo
-  ];
+  // Genspark logo — rasterised from SVG paths onto a canvas, same axis convention
+  function makeLogo(count) {
+    const SZ = 512;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = SZ;
+    const cx = cv.getContext('2d');
+    cx.fillStyle = '#000';
+    cx.fillRect(0, 0, SZ, SZ);
 
-  // ═══════════════════════════════════════════
-  // PARTICLE CONFIGS
-  // ═══════════════════════════════════════════
-  const cwParticleAConfig = {
-    shaderDefaults: {
-      uSize: 3, uSpread: [0,0], uNoiseFrequency: 8,
-      uNoiseStrength: 0.25, uDelay: 0.3,
-      uBaseColor: new THREE.Color('#ffffff')
-    },
-    steps: [
-      { position: new THREE.Vector3(0, 0, 2.5),     rotation: new THREE.Euler(0, 0, 0),            scale: 1   },  // 0
-      { position: new THREE.Vector3(0, -0.3, 1),    rotation: new THREE.Euler(1.57, 0, 0),         scale: 1   },  // 1
-      { position: new THREE.Vector3(8, -1.2, -8.3), rotation: new THREE.Euler(0.16, -0.91, -0.16), scale: 7   },  // 2
-      { position: new THREE.Vector3(0, 0, -0.7),    rotation: new THREE.Euler(0, 0, 0),            scale: 5.3 },  // 3: BIG WHITE SPHERE
-      { position: new THREE.Vector3(0.1, 0, 0),     rotation: new THREE.Euler(0, 0, 0),            scale: 3.4 },  // 4: Celsior CENTERED
-      { position: new THREE.Vector3(1.4, 0.0, 0.0), rotation: new THREE.Euler(0, 0, 0),            scale: 2.6 },  // 5: Celsior shifted right
-    ]
-  };
-  // cwParticleB: lime-green sphere — large, offset, fades in with white sphere
-  const cwParticleBConfig = {
-    shaderDefaults: {
-      uSize: 3, uSpread: [0,0], uNoiseFrequency: 8,
-      uNoiseStrength: 0.25, uDelay: 0.3,
-      uBaseColor: new THREE.Color('#6edb8f'), uAlpha: 0
-    },
-    steps: [
-      { position: new THREE.Vector3(1.8, 0.25, 0.1),  rotation: new THREE.Euler(0, 0, 0.6),    scale: 5 },
-      { position: new THREE.Vector3(1.8, -0.25, -0.2), rotation: new THREE.Euler(0, 1.57, 0.6), scale: 1 }
-    ]
-  };
+    const SVG_W = 125, SVG_H = 44;
+    const drawW = SZ * 0.82;
+    const sc    = drawW / SVG_W;
+    cx.save();
+    cx.translate((SZ - drawW) / 2, (SZ - drawW * (SVG_H / SVG_W)) / 2);
+    cx.scale(sc, sc);
+    cx.fillStyle = '#fff';
 
-    // THREE.JS SETUP
-  // ═══════════════════════════════════════════
+    const paths = [
+      "M30.9669 31.7308V30.4723C30.0231 31.7982 28.6523 32.4611 26.8321 32.4611C25.0119 32.4611 24.9444 32.2139 24.1804 31.697C23.4163 31.1914 22.8208 30.4836 22.3939 29.5622C21.9669 28.6409 21.7422 27.5847 21.7422 26.3824C21.7422 25.1802 21.9669 24.1128 22.4051 23.169C22.8545 22.2251 23.4838 21.4948 24.2927 20.9555C25.113 20.4161 26.0568 20.1465 27.1467 20.1465C28.2366 20.1465 28.7534 20.3038 29.3939 20.6296C30.0343 20.9555 30.5849 21.4499 31.0456 22.1128V20.5285H34.2703V30.9442C34.2703 33.315 33.7759 35.0454 32.7871 36.1352C31.7984 37.2251 30.259 37.7757 28.1692 37.7757C26.0793 37.7757 24.922 37.4274 23.9557 36.742C22.9894 36.0566 22.4163 35.0117 22.2478 33.5959H25.4501C25.5961 34.1353 25.877 34.5173 26.2927 34.7532C26.7085 34.9892 27.3265 35.1128 28.1467 35.1128C28.9669 35.1128 29.8321 34.8431 30.2815 34.2926C30.7422 33.742 30.9669 32.8881 30.9669 31.7195V31.7308ZM30.1804 23.8993C29.6411 23.3487 28.9332 23.0678 28.068 23.0678C27.2029 23.0678 26.4051 23.3487 25.8883 23.9218C25.3826 24.4948 25.1242 25.2926 25.1242 26.315C25.1242 27.3375 25.3714 28.1465 25.877 28.7195C26.3826 29.2926 27.0793 29.5847 27.9894 29.5847C28.8995 29.5847 29.5624 29.3038 30.1354 28.7532C30.7085 28.2027 30.9894 27.4611 30.9894 26.5285V26.169C30.9894 25.2027 30.7197 24.4499 30.1692 23.8881L30.1804 23.8993Z",
+      "M35.5508 26.8656C35.5508 25.506 35.8092 24.3263 36.3148 23.315C36.8204 22.315 37.5395 21.5285 38.4609 20.9779C39.3822 20.4274 40.4497 20.1465 41.6744 20.1465C43.5508 20.1465 45.0115 20.7083 46.0339 21.8206C47.0564 22.933 47.562 24.506 47.562 26.5285V27.5959H38.7306C38.8204 28.6409 39.1238 29.4049 39.6294 29.9105C40.1351 30.4049 40.8204 30.6521 41.6969 30.6521C43.1575 30.6521 44.0452 30.1465 44.3598 29.1352H47.4384C46.8766 31.8993 44.9328 33.2813 41.5957 33.2813C38.2586 33.2813 38.2025 32.7195 37.1463 31.5847C36.0901 30.4499 35.5508 28.8768 35.5508 26.8543V26.8656ZM43.7193 23.3937C43.2811 22.9555 42.5957 22.742 41.6519 22.742C40.7081 22.742 40.0002 23.0004 39.5845 23.5285C39.1688 24.0454 38.9103 24.697 38.8092 25.4723H44.4609C44.4047 24.5285 44.1575 23.8319 43.7306 23.3937H43.7193Z",
+      "M48.9551 20.5392H52.191V22.4381C52.7641 21.6741 53.3933 21.1123 54.0787 20.7303C54.7641 20.3482 55.5393 20.1572 56.4045 20.1572C57.7528 20.1572 58.7978 20.5617 59.5281 21.3819C60.2584 22.1909 60.618 23.3595 60.618 24.8763V32.9213H57.3146V25.6179C57.3146 24.7752 57.1461 24.1685 56.809 23.7752C56.4719 23.3932 55.9326 23.1909 55.191 23.1909C54.4495 23.1909 54.4045 23.2808 54.0225 23.4494C53.6405 23.6179 53.3034 23.8651 53.0337 24.1797C52.5169 24.7527 52.2584 25.4157 52.2584 26.1909V32.8988H48.9551V20.5168V20.5392Z",
+      "M70.046 29.4044C70.046 29.0449 69.8887 28.764 69.5854 28.573C69.282 28.3819 68.7202 28.2134 67.9 28.0786L66.6303 27.8426C64.9899 27.5392 63.8101 27.101 63.1135 26.5055C62.4056 25.91 62.0573 25.0561 62.0573 23.9325C62.0573 22.8089 62.5292 21.8201 63.4842 21.1572C64.4281 20.4943 65.7427 20.1572 67.4281 20.1572C69.1135 20.1572 70.473 20.4606 71.3269 21.0786C72.1696 21.6966 72.7202 22.5842 72.9786 23.764L69.9337 24.1235C69.664 23.1235 68.8326 22.6291 67.4281 22.6291C66.0236 22.6291 66.1359 22.7415 65.7427 22.9775C65.3494 23.2022 65.1472 23.5168 65.1472 23.91C65.1472 24.3033 65.2932 24.528 65.5854 24.719C65.8775 24.91 66.4168 25.0786 67.1921 25.2134L68.5629 25.4494C69.7427 25.6516 70.664 25.91 71.3382 26.2246C72.0123 26.528 72.4842 26.9325 72.7651 27.4269C73.046 27.9213 73.1921 28.5392 73.1921 29.3033C73.1921 31.9775 71.3607 33.3145 67.6865 33.3145C64.0123 33.3145 65.664 33.1797 64.8101 32.9213C63.9562 32.6628 63.2595 32.2246 62.7202 31.6179C62.1809 31.0112 61.8663 30.1797 61.7539 29.1348H64.855C65.0011 29.719 65.3045 30.1348 65.7764 30.3932C66.2483 30.6516 66.8663 30.7752 67.6303 30.7752C68.3944 30.7752 69.0123 30.6628 69.4168 30.4269C69.8326 30.2022 70.0348 29.8651 70.0348 29.4157L70.046 29.4044Z",
+      "M74.4722 20.5392H77.7081V22.3707C78.18 21.6404 78.7868 21.0898 79.4946 20.719C80.2137 20.3482 81.0115 20.1572 81.8991 20.1572C82.7868 20.1572 83.8092 20.4269 84.5621 20.9662C85.3149 21.5055 85.9104 22.2471 86.3261 23.2022C86.7531 24.1572 86.9666 25.2808 86.9666 26.5842C86.9666 27.8876 86.7531 29.0336 86.3149 30.0449C85.8767 31.0561 85.2587 31.8539 84.4497 32.4269C83.6407 32.9999 82.6857 33.2921 81.5845 33.2921C79.9104 33.2921 78.6407 32.6404 77.7643 31.3258V37.5168L74.4609 38.8988V20.5392H74.4722ZM83.6182 26.6741C83.6182 25.5392 83.371 24.6628 82.8767 24.0449C82.3823 23.4269 81.6744 23.1235 80.7643 23.1235C79.8542 23.1235 79.1688 23.4269 78.607 24.0449C78.0452 24.6628 77.7643 25.4381 77.7643 26.3707V26.9662C77.7643 27.9662 78.0227 28.7752 78.5508 29.3932C79.0789 30.0224 79.7755 30.3258 80.6632 30.3258C81.5508 30.3258 82.3823 30.0112 82.8767 29.3932C83.371 28.764 83.6182 27.8651 83.6182 26.6741Z",
+      "M87.5957 29.4494C87.5957 28.101 88.0789 27.101 89.0451 26.4269C90.0114 25.7527 91.5171 25.3932 93.562 25.3258L96.0114 25.2583V24.7864C96.0114 23.3932 95.2474 22.6966 93.7305 22.6966C92.2137 22.6966 91.4833 23.1572 91.2024 24.0673L88.2362 23.7864C88.6519 21.3707 90.5171 20.1572 93.8429 20.1572C97.1687 20.1572 99.135 21.7977 99.135 25.0898V32.9213H96.1126V31.2808C95.5283 31.9775 94.8991 32.4831 94.2137 32.7864C93.5283 33.0898 92.7418 33.2471 91.8541 33.2471C90.4833 33.2471 89.4384 32.9213 88.7081 32.2583C87.9777 31.6067 87.6069 30.6628 87.6069 29.4494H87.5957ZM90.7418 29.1685C90.7418 30.1797 91.4159 30.6853 92.7642 30.6853C94.1126 30.6853 93.8429 30.5842 94.3373 30.3707C94.8317 30.1572 95.2249 29.8539 95.5395 29.4606C95.8541 29.0673 96.0114 28.5842 96.0114 28.0112V27.4157L93.7642 27.4831C92.7193 27.5168 91.9553 27.6628 91.4721 27.9325C90.989 28.2022 90.7418 28.6179 90.7418 29.1685Z",
+      "M100.945 20.5397H104.181V22.4835C105.17 21.0453 106.417 20.3262 107.9 20.3262C109.383 20.3262 108.282 20.3374 108.473 20.3599C108.664 20.3824 108.877 20.4161 109.091 20.4385L108.709 23.5734C108.248 23.4947 107.844 23.4498 107.495 23.4498C106.484 23.4498 105.686 23.7531 105.091 24.3486C104.518 24.9329 104.237 25.6183 104.237 26.4161V32.9104H100.934V20.5284L100.945 20.5397Z",
+      "M109.854 15.9775H113.157V24.7303L117.752 20.5281H121.854L117.382 24.5843L122.314 32.9101H118.651L115.067 26.6292L113.157 28.3371V32.9101H109.854V15.9775Z",
+      "M15.5393 16.1461L20.2359 4.97754L12.8539 14.7303L8.08987 9.16855L10.5618 16.191L2.04492 17.6068L10.6292 19.1011L8.59548 25.2135L12.8876 20.4494L19.5505 29.0337L15.5505 19.1348L25.2247 17.6405L15.5505 16.1461H15.5393Z",
+    ];
+    for (const d of paths) cx.fill(new Path2D(d));
+    cx.restore();
+
+    const imgData = cx.getImageData(0, 0, SZ, SZ).data;
+    const cands = [];
+    for (let y = 0; y < SZ; y++)
+      for (let x = 0; x < SZ; x++)
+        if (imgData[(y * SZ + x) * 4] > 128) cands.push([x, y]);
+    for (let i = cands.length - 1; i > 0; i--) {
+      const j = (Math.random() * (i + 1)) | 0;
+      [cands[i], cands[j]] = [cands[j], cands[i]];
+    }
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const [px, py] = cands[i % cands.length];
+      pos[i * 3]     = px / SZ + (Math.random() - 0.5) * 1.5 / SZ;
+      pos[i * 3 + 1] = 0.5     + (Math.random() - 0.5) * 0.006;
+      pos[i * 3 + 2] = (1 - py / SZ) + (Math.random() - 0.5) * 1.5 / SZ;
+    }
+    return pos;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SHAPE BUFFERS — just two shapes, loaded once, never swapped
+  // ═══════════════════════════════════════════════════════════════════
+  const STAR_BUF = makeStar(N);
+  const LOGO_BUF = makeLogo(N);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // THREE.JS SETUP
+  // ═══════════════════════════════════════════════════════════════════
   const cwCanvas   = document.getElementById('cw-webgl');
   const cwRenderer = new THREE.WebGLRenderer({ canvas: cwCanvas, antialias: false, alpha: false });
   cwRenderer.setClearColor(0x071810);
@@ -4022,265 +4016,214 @@ void main(){
   const cwCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
   cwCamera.position.set(0, 0, 3.5);
 
-  function cwCreateParticleSystem(config, idx0, idx1) {
-    const count = CW_PARTICLE_COUNT;
-    const rnd   = new Float32Array(count * 4);
-    for (let i = 0; i < count * 4; i++) rnd[i] = Math.random();
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position',       new THREE.BufferAttribute(cwParticleShapes[idx0].slice(), 3));
-    geo.setAttribute('targetPosition', new THREE.BufferAttribute(cwParticleShapes[idx1].slice(), 3));
-    geo.setAttribute('random',         new THREE.BufferAttribute(rnd, 4));
-    const s0 = config.steps[0], s1 = config.steps[1] || config.steps[0];
-    const u = {
-      uTime:           { value: 0 },
-      uIdleTime:       { value: 0 },
-      uSize:           { value: config.shaderDefaults.uSize },
-      uSpread:         { value: new THREE.Vector2(...config.shaderDefaults.uSpread) },
-      uNoiseFrequency: { value: config.shaderDefaults.uNoiseFrequency },
-      uNoiseStrength:  { value: config.shaderDefaults.uNoiseStrength },
-      uDelay:          { value: config.shaderDefaults.uDelay },
-      uProgress:       { value: 0 },
-      uBaseColor:      { value: config.shaderDefaults.uBaseColor.clone() },
-      uAlpha:          { value: config.shaderDefaults.uAlpha !== undefined ? config.shaderDefaults.uAlpha : 1 },
-      uIdleRadius:     { value: new THREE.Vector2(0.01, 0.05) },
-      uIdleSpeed:      { value: 0.8 },
-    };
-    const mat = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: u, transparent: true, depthTest: false, blending: THREE.AdditiveBlending });
-    const pts = new THREE.Points(geo, mat);
-    pts.rotation.x = -Math.PI / 2;
-    pts.scale.setScalar(s0.scale);
-    pts.position.copy(s0.position);
+  // Random attribute — shared, never changes
+  const rnd = new Float32Array(N * 4);
+  for (let i = 0; i < N * 4; i++) rnd[i] = Math.random();
+
+  // Geometry: star→logo morph, loaded once, uProgress drives everything
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position',       new THREE.BufferAttribute(STAR_BUF.slice(), 3));
+  geo.setAttribute('targetPosition', new THREE.BufferAttribute(LOGO_BUF.slice(), 3));
+  geo.setAttribute('random',         new THREE.BufferAttribute(rnd, 4));
+
+  const uniforms = {
+    uTime:           { value: 0 },
+    uIdleTime:       { value: 0 },
+    uSize:           { value: 3 },
+    uSpread:         { value: new THREE.Vector2(0, 0) },
+    uNoiseFrequency: { value: 8 },
+    uNoiseStrength:  { value: 0.28 },
+    uDelay:          { value: 0.25 },
+    uProgress:       { value: 0 },
+    uBaseColor:      { value: new THREE.Color('#ffffff') },
+    uAlpha:          { value: 1 },
+    uIdleRadius:     { value: new THREE.Vector2(0.008, 0.04) },
+    uIdleSpeed:      { value: 0.7 },
+  };
+  const mat = new THREE.ShaderMaterial({
+    vertexShader, fragmentShader, uniforms,
+    transparent: true, depthTest: false, blending: THREE.AdditiveBlending,
+  });
+  const pts = new THREE.Points(geo, mat);
+  pts.rotation.x = -Math.PI / 2;
+  cwScene.add(pts);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SCROLL CHOREOGRAPHY
+  // The scroll is divided into 3 acts:
+  //   Act 1 [0 → 0.45]: Star lives — idle, breathing, interactive.
+  //                      Slowly drifts forward and rotates as you scroll.
+  //   Act 2 [0.45→0.75]: Morph — star dissolves into logo (uProgress 0→1).
+  //                       Both position and scale converge on logo rest state.
+  //   Act 3 [0.75→1.00]: Logo holds fully formed, drifts right to clear left text.
+  // ═══════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════
+  // SCROLL CHOREOGRAPHY — 4 acts
+  //
+  //  Act 0 [0.00 → 0.25]: Particles start FULLY dispersed (uSpread wide),
+  //                        condense INTO the star shape as you scroll.
+  //                        Star also scales from huge→normal and drifts from
+  //                        right edge → centre-right.
+  //
+  //  Act 1 [0.25 → 0.45]: Star is formed. Shifts RIGHT to reveal left text.
+  //                        Idle rotation + mouse parallax fully active.
+  //
+  //  Act 2 [0.45 → 0.62]: Star drifts back CENTRE, preparing for morph.
+  //
+  //  Act 3 [0.62 → 0.82]: Morph — star dissolves into logo (uProgress 0→1).
+  //                        Position/scale converge on logo rest state.
+  //
+  //  Act 4 [0.82 → 1.00]: Logo holds fully formed, drifts right to clear
+  //                        left column text.
+  // ═══════════════════════════════════════════════════════════════════
+  const A0 = 0.25;  // end of dispersion/condense
+  const A1 = 0.45;  // end of shift-right
+  const A2 = 0.62;  // end of shift-back-centre
+  const A3 = 0.82;  // end of morph → logo
+
+  // Keyframes: { px, py, pz, sc, spread }
+  // spread = uSpread half-range: 0 = tight, 2.5 = fully scattered
+  const KF = {
+    DISP:       { px: 0.6, py:0, pz: 1.5, sc: 5.0, spread: 2.8  }, // raw=0: wide scattered
+    STAR_FORM:  { px: 0.2, py:0, pz: 2.0, sc: 1.4, spread: 0.0  }, // raw=A0: star formed, centre-right
+    STAR_RIGHT: { px: 1.0, py:0, pz: 1.8, sc: 1.2, spread: 0.0  }, // raw=A1: shifted right
+    STAR_CTR:   { px: 0.1, py:0, pz: 1.8, sc: 1.3, spread: 0.0  }, // raw=A2: back to centre
+    LOGO_FORM:  { px: 0.1, py:0, pz: 0.0, sc: 3.4, spread: 0.0  }, // raw=A3: logo centred
+    LOGO_SHIFT: { px: 1.2, py:0, pz: 0.0, sc: 2.8, spread: 0.0  }, // raw=1.0: logo right
+  };
+
+  // Easing functions
+  function ss(t)     { t = Math.max(0,Math.min(1,t)); return t*t*(3-2*t); }           // smooth S-curve
+  function q4io(t)   { t = Math.max(0,Math.min(1,t)); return t<0.5 ? 8*t*t*t*t : 1-Math.pow(-2*t+2,4)/2; } // quartic in-out
+  function expoOut(t){ t = Math.max(0,Math.min(1,t)); return t===1?1:1-Math.pow(2,-10*t); } // expo ease-out
+  function cubicIO(t){ t = Math.max(0,Math.min(1,t)); return t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2; }
+
+  function lerpKF(a, b, t) {
     return {
-      points: pts, uniforms: u, geometry: geo, config,
-      state: {
-        currentIndex:  0,
-        startPosition: s0.position.clone(), endPosition: s1.position.clone(),
-        startScale:    s0.scale,             endScale:    s1.scale || s0.scale,
-        startRotation: s0.rotation.clone(),  endRotation: s1.rotation.clone(),
-      }
+      px:     a.px     + (b.px     - a.px)     * t,
+      py:     a.py     + (b.py     - a.py)     * t,
+      pz:     a.pz     + (b.pz     - a.pz)     * t,
+      sc:     a.sc     + (b.sc     - a.sc)     * t,
+      spread: a.spread + (b.spread - a.spread) * t,
     };
   }
 
-   const cwParticleA = cwCreateParticleSystem(cwParticleAConfig, 0, 1);
-  cwScene.add(cwParticleA.points);
-  // cwParticleB: lime-green sphere — shape[3] is the tight sphere, same geometry as white sphere
-  // cwParticleB: large green sphere, shape[3]=sphere, pos/scale driven by particleBConfig steps in scroll loop
-  const cwParticleB = cwCreateParticleSystem(cwParticleBConfig, 3, 3);
-  cwParticleB.points.visible = false;   // hidden until step 3
-  cwScene.add(cwParticleB.points);
+  let cwScrollProgress = 0;
+  const cwCameraOffset = { x: 0, y: 0 };
 
-  // ─── Wireframe layers permanently removed ───
-  const cwBoxMat    = { opacity: 0 }; // inert dummy — kept so references don't throw
-  const cwPlaneMeshes = [];           // empty array — cwShowLayers/cwHideLayers become no-ops
+  function applyScrollProgress(raw) {
+    cwScrollProgress = raw;
 
-  // ═══════════════════════════════════════════
-  // CANVAS CLIP — pixel-clamp canvas to exactly where
-  // #celsior-wrapper is visible in the viewport so it
-  // never bleeds into adjacent sections.
-  // ═══════════════════════════════════════════
-  const cwWrapper = document.getElementById('celsior-wrapper');
-  const cwHud     = document.querySelector('#celsior-wrapper .cw-hud');
+    let kf, morphP = 0;
 
-  // Show canvas (clip-path controls what's actually visible)
-  cwCanvas.style.display = 'block';
+    if (raw < A0) {
+      // Act 0: particles condense from dispersion into star shape
+      const t = ss(raw / A0);
+      kf = lerpKF(KF.DISP, KF.STAR_FORM, t);
+      morphP = 0;
 
-  // Height the HUD occupies at viewport bottom (labels + bar + hint + padding)
-  var CW_HUD_H = 90;
+    } else if (raw < A1) {
+      // Act 1: star formed, shifts right
+      const t = cubicIO((raw - A0) / (A1 - A0));
+      kf = lerpKF(KF.STAR_FORM, KF.STAR_RIGHT, t);
+      morphP = 0;
 
-  function cwUpdateClip() {
-    var rect        = cwWrapper.getBoundingClientRect();
-    var vh          = window.innerHeight;
-    var insetTop    = Math.max(0, Math.min(vh, rect.top));
-    var insetBottom = Math.max(0, Math.min(vh, vh - rect.bottom));
-    var visible     = rect.bottom > 0 && rect.top < vh;
+    } else if (raw < A2) {
+      // Act 2: star drifts back to centre
+      const t = ss((raw - A1) / (A2 - A1));
+      kf = lerpKF(KF.STAR_RIGHT, KF.STAR_CTR, t);
+      morphP = 0;
 
-    cwCanvas.style.visibility = visible ? 'visible' : 'hidden';
-    cwCanvas.style.clipPath   = 'inset(' + insetTop + 'px 0px ' + insetBottom + 'px 0px)';
-
-    // Hide HUD when wrapper bottom is within HUD_H of viewport bottom,
-    // so the progress bar never overlaps the section below.
-    var hudVisible = visible && rect.bottom > (vh - CW_HUD_H + 28);
-    if (cwHud) cwHud.style.display = hudVisible ? 'flex' : 'none';
-  }
-
-  window.addEventListener('scroll', cwUpdateClip, { passive: true });
-  window.addEventListener('resize', cwUpdateClip);
-  cwUpdateClip();
-
-  // ═══════════════════════════════════════════
-  // SCROLL — drives particles across the section
-  // ═══════════════════════════════════════════
-  const CW_TRANSITION_COUNT = 5;
-  let cwCameraOffset = { x: 0, y: 0 };
-  let cwIdleTime = 0;
-
-  function cwShowLayers() {
-    gsap.to([cwBoxMat, ...cwPlaneMeshes.map(p => p.material)], { opacity: 1, duration: 0.8, stagger: 0.1 });
-  }
-  function cwHideLayers() {
-    gsap.to([cwBoxMat, ...cwPlaneMeshes.map(p => p.material)], { opacity: 0, duration: 0.5 });
-  }
-
-  function cwOnScrollComplete(index, direction) {
-    // Shapes: 0=sphere 1=disk 2=cloud 3=bigSphere 4=celsior
-    // Steps:  0->1->2->3->4->5(celsior-shift)
-    // CRITICAL: step 3->4 = bigSphere->celsior (morph)
-    //           step 4->5 = celsior->celsior (NO morph, pure pos/scale lerp)
-    const aSteps = cwParticleAConfig.steps;
-
-    if (direction === 1) {
-      const prevIdx = index;
-      const nextIdx = Math.min(index + 1, aSteps.length - 1);
-
-      // Shape indices: clamped to 4 (celsior is shape[4], used for BOTH step 4 and step 5)
-      const shapeFrom = Math.min(prevIdx, 4);
-      const shapeTo   = Math.min(nextIdx, 4);  // step5->step5 uses celsior for both = no morph
-      cwParticleA.geometry.setAttribute('position',       new THREE.BufferAttribute(cwParticleShapes[shapeFrom].slice(), 3));
-      cwParticleA.geometry.setAttribute('targetPosition', new THREE.BufferAttribute(cwParticleShapes[shapeTo].slice(), 3));
-      cwParticleA.geometry.attributes.position.needsUpdate = true;
-      cwParticleA.geometry.attributes.targetPosition.needsUpdate = true;
-
-      if (prevIdx < aSteps.length && nextIdx < aSteps.length) {
-        cwParticleA.state.startPosition = aSteps[prevIdx].position.clone();
-        cwParticleA.state.endPosition   = aSteps[nextIdx].position.clone();
-        cwParticleA.state.startScale    = aSteps[prevIdx].scale;
-        cwParticleA.state.endScale      = aSteps[nextIdx].scale || aSteps[prevIdx].scale;
-        cwParticleA.state.startRotation = aSteps[prevIdx].rotation.clone();
-        cwParticleA.state.endRotation   = aSteps[nextIdx].rotation.clone();
-      }
-      cwParticleA.uniforms.uProgress.value = 0;
-
-      // Green sphere: visible during step 3 (big sphere) and step 4 (sphere->celsior transition)
-      if (index + 1 === 3) cwParticleB.points.visible = true;
-      if (index + 1 >= 4)  { cwParticleB.points.visible = false; cwParticleB.uniforms.uAlpha.value = 0; }
+    } else if (raw < A3) {
+      // Act 3: morph star → logo
+      const t = q4io((raw - A2) / (A3 - A2));
+      kf = lerpKF(KF.STAR_CTR, KF.LOGO_FORM, t);
+      morphP = t;
 
     } else {
-      const nextIdx = Math.max(index, 0);
-      const prevIdx = Math.max(index - 1, 0);
-      const shapeFrom = Math.min(prevIdx, 4);
-      const shapeTo   = Math.min(nextIdx, 4);
-      cwParticleA.geometry.setAttribute('position',       new THREE.BufferAttribute(cwParticleShapes[shapeFrom].slice(), 3));
-      cwParticleA.geometry.setAttribute('targetPosition', new THREE.BufferAttribute(cwParticleShapes[shapeTo].slice(), 3));
-      cwParticleA.geometry.attributes.position.needsUpdate = true;
-      cwParticleA.geometry.attributes.targetPosition.needsUpdate = true;
-
-      if (prevIdx < aSteps.length && nextIdx < aSteps.length) {
-        cwParticleA.state.startPosition = aSteps[prevIdx].position.clone();
-        cwParticleA.state.endPosition   = aSteps[nextIdx].position.clone();
-        cwParticleA.state.startScale    = aSteps[prevIdx].scale;
-        cwParticleA.state.endScale      = aSteps[nextIdx].scale || aSteps[prevIdx].scale;
-        cwParticleA.state.startRotation = aSteps[prevIdx].rotation.clone();
-        cwParticleA.state.endRotation   = aSteps[nextIdx].rotation.clone();
-      }
-      cwParticleA.uniforms.uProgress.value = 0;
-      if (index === 3) cwParticleB.points.visible = true;
-      if (index <= 2)  { cwParticleB.points.visible = false; cwParticleB.uniforms.uAlpha.value = 0; }
+      // Act 4: logo holds, drifts right
+      const t = expoOut((raw - A3) / (1 - A3));
+      kf = lerpKF(KF.LOGO_FORM, KF.LOGO_SHIFT, t);
+      morphP = 1; // logo fully formed — locked, no re-dispersion
     }
+
+    // Apply transform
+    pts.position.set(kf.px, kf.py, kf.pz);
+    pts.scale.setScalar(kf.sc);
+    pts.rotation.x = -Math.PI / 2;
+
+    // Spread: scatter particles outward (Act 0 only)
+    uniforms.uSpread.value.set(-kf.spread, kf.spread);
+    uniforms.uProgress.value = morphP;
+
+    // HUD
+    const starFade = document.getElementById('cwStarIntro');
+    if (starFade) starFade.style.opacity = Math.max(0, 1 - raw * 12);
+    document.getElementById('cwProgressFill').style.transform = `scaleX(${raw})`;
+    document.getElementById('cwTechLabels').classList.toggle('visible', raw > 0.88);
+    document.getElementById('cwScrollHint').style.opacity = Math.max(0, 1 - raw * 9);
+
+    cwCameraOffset.x = -0.2 * raw;
+    cwCameraOffset.y = -0.12 * raw;
   }
 
-  const cwTl = gsap.timeline({
+  // ═══════════════════════════════════════════════════════════════════
+  // CANVAS CLIP
+  // ═══════════════════════════════════════════════════════════════════
+  const cwWrapper = document.getElementById('celsior-wrapper');
+  const cwHud     = document.querySelector('#celsior-wrapper .cw-hud');
+  cwCanvas.style.display = 'block';
+
+  function cwUpdateClip() {
+    const rect = cwWrapper.getBoundingClientRect();
+    const vh   = window.innerHeight;
+    const insetTop    = Math.max(0, Math.min(vh, rect.top));
+    const insetBottom = Math.max(0, Math.min(vh, vh - rect.bottom));
+    const visible     = rect.bottom > 0 && rect.top < vh;
+    cwCanvas.style.visibility = visible ? 'visible' : 'hidden';
+    cwCanvas.style.clipPath   = `inset(${insetTop}px 0px ${insetBottom}px 0px)`;
+    if (cwHud) cwHud.style.display = (visible && rect.bottom > vh - 90 + 28) ? 'flex' : 'none';
+  }
+  window.addEventListener('scroll',  cwUpdateClip, { passive: true });
+  window.addEventListener('resize',  cwUpdateClip);
+  cwUpdateClip();
+
+  // ═══════════════════════════════════════════════════════════════════
+  // GSAP SCROLL TRIGGER — single progress value drives everything
+  // ═══════════════════════════════════════════════════════════════════
+  let cwIdleTime = 0;
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.to({}, {
     scrollTrigger: {
       trigger: '.page-sections',
       start: 'top top',
       end: 'bottom bottom',
-      scrub: true,
+      scrub: 1.4, // generous smoothing — organic, cinematic deceleration
+      onUpdate(self) {
+        applyScrollProgress(self.progress);
+      },
     }
   });
 
-  // i=0: sphere->disk
-  // i=1: disk->cloud
-  // i=2: cloud->bigWhiteSphere  (green fades IN)
-  // i=3: bigSphere->celsior     (green fades OUT, logo forms — morph shader active)
-  // i=4: celsior->celsior-shift (logo HOLDS shape, only position/scale lerp, NO re-dispersion)
-  for (let i = 0; i < CW_TRANSITION_COUNT; i++) {
-    const proxy    = { x: 0 };
-    const duration = (i === 0 || i === CW_TRANSITION_COUNT - 1) ? 1.5 : 1;
-    cwTl.to(proxy, {
-      x: 1, duration, ease: 'sine.inOut',
-      onUpdate() {
-        const p = proxy.x;
-
-        // ── For i=4: logo shift — uProgress stays 0 so shader doesn't re-fire morph ──
-        // We set progress=0 so ALL particles stay at their "from" (celsior) positions
-        // and only the mesh transform changes.
-        cwParticleA.uniforms.uProgress.value = (i === 4) ? 0 : p;
-
-        cwParticleA.points.position.lerpVectors(cwParticleA.state.startPosition, cwParticleA.state.endPosition, p);
-        cwParticleA.points.scale.setScalar(cwParticleA.state.startScale + (cwParticleA.state.endScale - cwParticleA.state.startScale) * p);
-        cwParticleA.points.rotation.x = cwParticleA.state.startRotation.x + (cwParticleA.state.endRotation.x - cwParticleA.state.startRotation.x) * p - Math.PI / 2;
-        cwParticleA.points.rotation.y = cwParticleA.state.startRotation.y + (cwParticleA.state.endRotation.y - cwParticleA.state.startRotation.y) * p;
-        cwParticleA.points.rotation.z = cwParticleA.state.startRotation.z + (cwParticleA.state.endRotation.z - cwParticleA.state.startRotation.z) * p;
-
-        // ── cwParticleB: green sphere (nfinite-final approach) ──
-        if (i === 2) {
-          // Cloud condensing into white sphere — green fades in
-          cwParticleB.points.visible = true;
-          const alphaT = Math.max(0, Math.min(1, p / 0.3));
-          cwParticleB.uniforms.uAlpha.value    = alphaT;
-          cwParticleB.uniforms.uProgress.value = p;
-          const bs = cwParticleBConfig.steps[0];
-          const be = cwParticleBConfig.steps[1];
-          cwParticleB.points.position.lerpVectors(bs.position, be.position, p);
-          cwParticleB.points.scale.setScalar(bs.scale + (be.scale - bs.scale) * p);
-        } else if (i === 3) {
-          // Big sphere -> celsior — green fades out
-          cwParticleB.points.visible = true;
-          cwParticleB.uniforms.uAlpha.value    = Math.max(0, 1 - p / 0.35);
-          cwParticleB.uniforms.uProgress.value = p;
-          const bs = cwParticleBConfig.steps[0];
-          const be = cwParticleBConfig.steps[1];
-          cwParticleB.points.position.lerpVectors(bs.position, be.position, p);
-          cwParticleB.points.scale.setScalar(bs.scale + (be.scale - bs.scale) * p);
-          if (p > 0.4) cwParticleB.points.visible = false;
-        }
-        // ──────────────────────────────────────────────────────────────────
-
-        const overall = (i + p) / CW_TRANSITION_COUNT;
-        cwCameraOffset.x = -0.3 * overall;
-        cwCameraOffset.y = -0.2 * overall;
-
-        document.getElementById('cwProgressFill').style.transform = `scaleX(${overall})`;
-        document.getElementById('cwTechLabels').classList.toggle('visible', overall > 0.85);
-        document.getElementById('cwScrollHint').style.opacity = Math.max(0, 1 - overall * 8);
-      },
-      onComplete()        { cwOnScrollComplete(i + 1,  1); },
-      onReverseComplete() { cwOnScrollComplete(i,      -1); }
-    }, '>');
-  }
-
-    // GSAP CONTENT ANIMATIONS
-  // ═══════════════════════════════════════════
-  gsap.utils.toArray('#celsior-wrapper .anim-up').forEach(function(el, i) {
+  // ═══════════════════════════════════════════════════════════════════
+  // GSAP CONTENT ANIMATIONS
+  // ═══════════════════════════════════════════════════════════════════
+  gsap.utils.toArray('#celsior-wrapper .anim-up').forEach((el, i) => {
     gsap.to(el, {
-      scrollTrigger: {
-        trigger: el,
-        start: 'top 90%',
-        toggleActions: 'play none none reverse',
-      },
-      opacity: 1, y: 0,
-      duration: 0.85,
-      delay: (i % 6) * 0.07,
-      ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none reverse' },
+      opacity: 1, y: 0, duration: 0.85, delay: (i % 6) * 0.07, ease: 'power3.out',
+    });
+  });
+  gsap.utils.toArray('#celsior-wrapper .anim-left').forEach((el, i) => {
+    gsap.to(el, {
+      scrollTrigger: { trigger: '#sec-ald', start: 'top 82%', toggleActions: 'play none none reverse' },
+      opacity: 1, x: 0, duration: 1.0, delay: i * 0.14, ease: 'power3.out',
     });
   });
 
-  gsap.utils.toArray('#celsior-wrapper .anim-left').forEach(function(el, i) {
-    gsap.to(el, {
-      scrollTrigger: {
-        trigger: '#sec-ald',
-        start: 'top 82%',
-        toggleActions: 'play none none reverse',
-      },
-      opacity: 1, x: 0,
-      duration: 1.0,
-      delay: i * 0.14,
-      ease: 'power3.out',
-    });
-  });
-
-  // ═══════════════════════════════════════════
-  // RESIZE + RENDER LOOP
-  // ═══════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════
+  // RESIZE
+  // ═══════════════════════════════════════════════════════════════════
   function cwResize() {
     cwRenderer.setSize(window.innerWidth, window.innerHeight);
     cwCamera.aspect = window.innerWidth / window.innerHeight;
@@ -4289,31 +4232,79 @@ void main(){
   cwResize();
   window.addEventListener('resize', cwResize);
 
-  let cwLastTime = 0;
+  // ═══════════════════════════════════════════════════════════════════
+  // RENDER LOOP — spring camera + mouse parallax on star
+  // ═══════════════════════════════════════════════════════════════════
+  const cwCamVel    = { x: 0, y: 0 };
+  const cwCamCur    = { x: 0, y: 0 };
+  const cwMouse     = { x: 0, y: 0 };
+  const cwTilt      = { x: 0, y: 0 };
+  const cwTiltVel   = { x: 0, y: 0 };
+  let cwMouseActive = false, cwMouseTimer = null;
+  let cwLastTime    = 0;
+
+  document.addEventListener('mousemove', e => {
+    cwMouse.x =  (e.clientX / window.innerWidth  - 0.5) * 2;
+    cwMouse.y = -(e.clientY / window.innerHeight - 0.5) * 2;
+    cwMouseActive = true;
+    clearTimeout(cwMouseTimer);
+    cwMouseTimer = setTimeout(() => { cwMouseActive = false; }, 2500);
+  });
+  document.addEventListener('touchmove', e => {
+    cwMouse.x =  (e.touches[0].clientX / window.innerWidth  - 0.5) * 2;
+    cwMouse.y = -(e.touches[0].clientY / window.innerHeight - 0.5) * 2;
+    cwMouseActive = true;
+  }, { passive: true });
+
   function cwAnimate(time) {
     requestAnimationFrame(cwAnimate);
-    const dt = (time - cwLastTime) * 0.001;
+    const dt = Math.min((time - cwLastTime) * 0.001, 0.05);
     cwLastTime = time;
     cwIdleTime += dt;
-    cwParticleA.uniforms.uTime.value     = time * 0.001;
-    cwParticleA.uniforms.uIdleTime.value = cwIdleTime;
-    cwParticleB.uniforms.uTime.value     = time * 0.001;
-    cwParticleB.uniforms.uIdleTime.value = cwIdleTime;
-    cwCamera.position.x += (cwCameraOffset.x - cwCamera.position.x) * 0.05;
-    cwCamera.position.y += (cwCameraOffset.y - cwCamera.position.y) * 0.05;
+
+    uniforms.uTime.value     = time * 0.001;
+    uniforms.uIdleTime.value = cwIdleTime;
+
+    // Mouse tilt + auto-orbit: active while star is visible (Acts 0-2), fades during morph
+    // starVisibility = 1 during star acts, ramps to 0 during morph
+    const starVisibility = Math.max(0, 1 - Math.max(0, cwScrollProgress - A2) / (A3 - A2));
+    const mx = cwMouseActive ? cwMouse.x * 0.22 * starVisibility : 0;
+    const my = cwMouseActive ? cwMouse.y * 0.14 * starVisibility : 0;
+    const K = 14, D = 7;
+    cwTiltVel.x += (mx - cwTilt.x) * K * dt - cwTiltVel.x * D * dt;
+    cwTiltVel.y += (my - cwTilt.y) * K * dt - cwTiltVel.y * D * dt;
+    cwTilt.x += cwTiltVel.x * dt;
+    cwTilt.y += cwTiltVel.y * dt;
+
+    // Auto-orbit when mouse idle, only while in star acts (0-2)
+    if (starVisibility > 0.05) {
+      const autoStrength = cwMouseActive ? 0.02 : 0.14;
+      const autoY = Math.sin(cwIdleTime * 0.20) * autoStrength * starVisibility;
+      const autoZ = Math.sin(cwIdleTime * 0.12 + 0.9) * 0.035 * starVisibility;
+      pts.rotation.y += (cwTilt.x + autoY - pts.rotation.y) * Math.min(1, dt * 3.5);
+      pts.rotation.z += (cwTilt.y + autoZ - pts.rotation.z) * Math.min(1, dt * 3.5);
+    } else {
+      // Logo phase: snap rotations to 0 smoothly
+      pts.rotation.y += (0 - pts.rotation.y) * Math.min(1, dt * 4);
+      pts.rotation.z += (0 - pts.rotation.z) * Math.min(1, dt * 4);
+    }
+
+    // Spring-damp camera
+    const CK = 5, CD = 6;
+    cwCamVel.x += (cwCameraOffset.x - cwCamCur.x) * CK * dt - cwCamVel.x * CD * dt;
+    cwCamVel.y += (cwCameraOffset.y - cwCamCur.y) * CK * dt - cwCamVel.y * CD * dt;
+    cwCamCur.x += cwCamVel.x * dt;
+    cwCamCur.y += cwCamVel.y * dt;
+    cwCamera.position.x += (cwCamCur.x - cwCamera.position.x) * 0.08;
+    cwCamera.position.y += (cwCamCur.y - cwCamera.position.y) * 0.08;
     cwCamera.lookAt(0, 0, 0);
+
     cwRenderer.render(cwScene, cwCamera);
   }
   cwAnimate(0);
 
 })();
 </script>
-
-
-
-
-<script>
-(function() {
   const canvas = document.getElementById('emParticleCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
