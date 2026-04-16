@@ -2083,29 +2083,28 @@
     <div class="carousel-viewport">
       <div class="carousel-track" id="carouselTrack">
         <div class="sc-card sc-card--logo sc-pal-1">
-          <div class="sc-card-frost"></div><img
-            src="https://cdn.fastpixel.io/fp/ret_img+v_e662+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F07%2FFrame-1973341828.svg"
-            alt="" />
+          <div class="sc-card-frost"></div>
+          <div class="sc-card-text"><span class="sc-card-line1">Testing &amp; QA</span><span class="sc-card-line2">Automation</span></div>
         </div>
         <div class="sc-card sc-card--logo sc-pal-2" style="--orb-delay:1.4s">
-          <div class="sc-card-frost"></div><img
-            src="https://cdn.fastpixel.io/fp/ret_img+v_67f1+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F05%2FFrame-1973341655.svg"
-            alt="" />
+          <div class="sc-card-frost"></div>
+          <div class="sc-card-text"><span class="sc-card-line1">Frontend</span><span class="sc-card-line2">Development</span></div>
         </div>
         <div class="sc-card sc-card--logo sc-pal-3" style="--orb-delay:2.8s">
-          <div class="sc-card-frost"></div><img
-            src="https://cdn.dm.dynatrace.com/assets/Marketing/seo/dynatrace_web.png" alt=""
-            style="filter: brightness(0) invert(1);" />
+          <div class="sc-card-frost"></div>
+          <div class="sc-card-text"><span class="sc-card-line1">DevOps</span><span class="sc-card-line2">Toolchain</span></div>
         </div>
         <div class="sc-card sc-card--logo sc-pal-4" style="--orb-delay:0.7s">
-          <div class="sc-card-frost"></div><img
-            src="https://cdn.fastpixel.io/fp/ret_img+v_fb5e+q_lossy+to_webp/pyramidci.com%2Fwp-content%2Fuploads%2F2024%2F07%2FFrame-1973341827.svg"
-            alt="" />
+          <div class="sc-card-frost"></div>
+          <div class="sc-card-text"><span class="sc-card-line1">Data &amp;</span><span class="sc-card-line2">Analytics</span></div>
         </div>
         <div class="sc-card sc-card--logo sc-pal-5" style="--orb-delay:2.1s">
-          <div class="sc-card-frost"></div><img
-            src="https://avasant.com/wp-content/uploads/2023/06/Avasant-white-logo.png" alt=""
-            style="filter: brightness(0) invert(1);" />
+          <div class="sc-card-frost"></div>
+          <div class="sc-card-text"><span class="sc-card-line1">AI &amp; GenAI</span><span class="sc-card-line2">Stack</span></div>
+        </div>
+        <div class="sc-card sc-card--logo sc-pal-1" style="--orb-delay:3.5s">
+          <div class="sc-card-frost"></div>
+          <div class="sc-card-text"><span class="sc-card-line1">Cloud</span><span class="sc-card-line2">Platforms</span></div>
         </div>
       </div>
       <div class="carousel-fade carousel-fade--left"></div>
@@ -2445,6 +2444,44 @@
     .sc-card--logo:hover img {
       opacity: 1;
       transform: scale(1.04);
+    }
+
+    /* ── Text card content ── */
+    .sc-card-text {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 32px;
+      text-align: center;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sc-card--logo:hover .sc-card-text {
+      transform: scale(1.04);
+    }
+
+    .sc-card-line1 {
+      display: block;
+      font-family: var(--font-head);
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.55);
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+    }
+
+    .sc-card-line2 {
+      display: block;
+      font-family: var(--font-head);
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
     }
 
     /* ── Mobile ── */
@@ -4772,7 +4809,7 @@
   <section class="faq-section" id="faqSection">
     <div class="faq-inner">
       <div class="faq-header">
-        <span class="faq-pill">FAQ</span>
+        <span class="faq-pill"></span>
         <h2 class="faq-heading">Questions We<br><span class="hl-accent">Hear Most Often</span></h2>
       </div>
       <div class="faq-list">
@@ -5615,7 +5652,7 @@
 
       <!-- Headline row -->
       <div class="eco-headline-row">
-        <span class="eco-hl eco-hl--left">One Engineering<br>Platform</span>
+        <span class="eco-hl eco-hl--left">Certified<br>Resources</span>
         <div class="eco-hub-box">
           <img src="https://celsiortech.com/wp-content/uploads/2024/07/Frame-1973341793.svg" alt="Celsior"
             class="eco-hub-logo" />
@@ -5646,7 +5683,7 @@
               src="https://res.cloudinary.com/dden4hawr/image/upload/v1772534735/cel/5_nipjvi.png" alt="Guidewire" />
           </div>
           <div class="eco-logo-item"><img
-              src="https://res.cloudinary.com/dden4hawr/image/upload/v1772534735/cel/3_nkb0wr.png" alt="ServiceNow" />
+              src="https://res.cloudinary.com/dden4hawr/image/upload/v1776336422/Untitled_design_41_keoxcr.png" alt="ServiceNow" />
           </div>
         </div>
       </div>
